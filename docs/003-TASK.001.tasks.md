@@ -1,11 +1,11 @@
-# Milestone 1: 基盤構築 (Infrastructure, Proto & Shared Types
+# Milestone 1: 基盤構築 (Infrastructure, Proto & Shared Types)
 
 ## Task 1-1: モノレポ基盤と共通環境の構築
 
 * **Background**: 複数言語・複数サービスを円滑に管理するため、Go Workspaces と Node.js Workspaces を導入します。また、`CELO_` プレフィックスを用いた環境変数規約を確立します。
 * **Acceptance Criteria**:
   * ルートに `go.work` が存在し、各サービスを認識していること。
-  * `docker compose up -d` で Postgres が起動し、`init.sh` により `irs`, `be` が作成されること。
+  * `docker compose up -d` で Postgres が起動し、`init.sh` により `isr`, `be` が作成されること。
   * 各サービスが `CELO_DB_URL` などの統一的な環境変数で設定可能であること。
 
 * **批判的視点への対策**: 接続文字列の形式を全サービスで統一（`postgres://user:pass@host:port/db`）し、環境変数の不一致による起動失敗を防止。
