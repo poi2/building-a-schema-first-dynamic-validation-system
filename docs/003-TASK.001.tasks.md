@@ -2,23 +2,23 @@
 
 ## Task 1-1: モノレポ基盤と共通環境の構築
 
-* **Background**: 複数言語・複数サービスを円滑に管理するため、Go Workspaces と Node.js Workspaces を導入します。また、ポート衝突を防ぐ動的マッピングと、`CELO_` プレフィックスを用いた環境変数規約を確立します。
+* **Background**: 複数言語・複数サービスを円滑に管理するため、Go Workspaces と Node.js Workspaces を導入します。また、`CELO_` プレフィックスを用いた環境変数規約を確立します。
 * **Acceptance Criteria**:
-* ルートに `go.work` が存在し、`./pkg/gen` および各サービスを認識していること。
-* `docker compose up -d` で Postgres が起動し、`init.sh` により `irs_db`, `be_db` が作成されること。
-* 各サービスが `CELO_DB_URL` などの統一的な環境変数で設定可能であること。
+  * ルートに `go.work` が存在し、各サービスを認識していること。
+  * `docker compose up -d` で Postgres が起動し、`init.sh` により `irs`, `be` が作成されること。
+  * 各サービスが `CELO_DB_URL` などの統一的な環境変数で設定可能であること。
 
 * **批判的視点への対策**: 接続文字列の形式を全サービスで統一（`postgres://user:pass@host:port/db`）し、環境変数の不一致による起動失敗を防止。
 
 ## Task 1-2: Proto定義と「型専用共有モジュール」の確立
 
-* **Background**: 生成されたコードの配置場所がバラバラだと Import Cycle や補完エラーの原因になります。プロジェクトルートの `pkg/gen` を「型専用の Go モジュール」として定義し、全サービスがここを参照する構造を作ります。
+* **Background**: 生成されたコードの配置場所がバラバラだと Import Cycle や補完エラーの原因になります。プロジェクトルートの `pkg/gen` を「型専用の共有ディレクトリ」として定義し、全サービスがここを参照する構造を作ります。
 * **Acceptance Criteria**:
-* `buf generate` を実行すると、`pkg/gen/go/` および `pkg/gen/ts/` にコードが出力されること。
-* `pkg/gen/go` に独自の `go.mod` があり、`be` や `isr` サービスから `import "github.com/user/celo/pkg/gen/go/..."` として参照できること。
-* `buf lint` が CI 上でパスすること。
+  * `buf generate` を実行すると、`pkg/gen/go/` および `pkg/gen/ts/` にコードが出力されること。
+  * `pkg/gen/go` には `go.mod` を置かず、Go Workspaces でルートおよび各サービスから参照できること。
+  * `buf lint` が CI 上でパスすること。
 
-* **批判的視点への対策**: 生成コードを各サービス内に閉じ込めず、共有パッケージ (`pkg/gen`) とすることで、IDE の定義ジャンプや補完を確実に機能させる。
+* **批判的視点への対策**: 生成コードを各サービス内に閉じ込めず、共有ディレクトリ (`pkg/gen`) とすることで、IDE の定義ジャンプや補完を確実に機能させる。
 
 ---
 
