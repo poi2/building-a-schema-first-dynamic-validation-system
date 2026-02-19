@@ -8,7 +8,6 @@
 * `docker compose up -d` で Postgres が起動し、`init.sh` により `irs_db`, `be_db` が作成されること。
 * 各サービスが `CELO_DB_URL` などの統一的な環境変数で設定可能であること。
 
-
 * **批判的視点への対策**: 接続文字列の形式を全サービスで統一（`postgres://user:pass@host:port/db`）し、環境変数の不一致による起動失敗を防止。
 
 ## Task 1-2: Proto定義と「型専用共有モジュール」の確立
@@ -18,7 +17,6 @@
 * `buf generate` を実行すると、`pkg/gen/go/` および `pkg/gen/ts/` にコードが出力されること。
 * `pkg/gen/go` に独自の `go.mod` があり、`be` や `isr` サービスから `import "github.com/user/celo/pkg/gen/go/..."` として参照できること。
 * `buf lint` が CI 上でパスすること。
-
 
 * **批判的視点への対策**: 生成コードを各サービス内に閉じ込めず、共有パッケージ (`pkg/gen`) とすることで、IDE の定義ジャンプや補完を確実に機能させる。
 
@@ -57,15 +55,11 @@ celo/
 * **Acceptance Criteria**:
 * `UploadSchema` でバイナリ保存、`GetLatestPatch` で最新版を返却できること。
 
-
-
 ### Task: Local Upload スクリプトの実装
 
 * **Background**: 開発環境から ISR へ UUID v7 を伴う最新スキーマを送り込む。
 * **Acceptance Criteria**:
 * スクリプト一発で `.proto` ビルドから ISR 登録までが完了すること。
-
-
 
 ---
 
@@ -77,15 +71,11 @@ celo/
 * **Acceptance Criteria**:
 * ユーザーの新規作成と一覧取得ができること。
 
-
-
 ### Task: 動的スキーマ同期 (Hot Reload) 実装
 
 * **Background**: 1分周期のポーリングと、バリデーターの Atomic Swap を実装する。
 * **Acceptance Criteria**:
 * アプリを止めずに、ログ上でスキーマバージョンの更新が確認できること。
-
-
 
 ### Task: Post API と Context Enrichment 実装
 
@@ -93,8 +83,6 @@ celo/
 * **Acceptance Criteria**:
 * **Testcontainers-go** による統合テストがパスすること。
 * バリデーションエラーに `Design Doc 5` 仕様の `message_id` 等が含まれること。
-
-
 
 ---
 
@@ -106,15 +94,11 @@ celo/
 * **Acceptance Criteria**:
 * レスポンスヘッダーに `X-Schema-Version` を付与し、APIプロキシが機能すること。
 
-
-
 ### Task: Frontend (React) と動的バリデーション UI
 
 * **Background**: 即時フィードバックとバックグラウンドでのスキーマ更新を実装。
 * **Acceptance Criteria**:
 * スキーマ更新後、リロードなしで入力エラーの閾値が変化すること。
-
-
 
 ### Task: シナリオテスト (Playwright) の導入
 
