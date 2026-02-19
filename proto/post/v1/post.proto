@@ -20,6 +20,16 @@ message Post {
 
 // CreatePostRequest with CEL validation based on user plan
 message CreatePostRequest {
+  // Message-level CEL constraint for dynamic content length validation
+  option (buf.validate.message).cel = {
+    id: "content_length_by_plan"
+    message: "Content exceeds plan limit (FREE: 1000, PRO: 5000, ENTERPRISE: 10000 chars)"
+    expression:
+      "this._plan == 1 ? size(this.content) <= 1000 : "     // FREE: 1000 chars
+      "this._plan == 2 ? size(this.content) <= 5000 : "     // PRO: 5000 chars
+      "size(this.content) <= 10000"                         // ENTERPRISE: 10000 chars
+  };
+
   string user_id = 1 [(buf.validate.field).string.uuid = true];
 
   string title = 2 [(buf.validate.field).string = {
@@ -27,13 +37,8 @@ message CreatePostRequest {
     max_len: 200
   }];
 
-  // Content length varies by user plan (enforced via CEL)
-  string content = 3 [(buf.validate.field) = {
-    string: {
-      min_len: 1
-      max_len: 10000  // Maximum limit (ENTERPRISE)
-    }
-  }];
+  // Content length varies by user plan (enforced via message-level CEL above)
+  string content = 3 [(buf.validate.field).string.min_len = 1];
 
   // Context enrichment field (injected by backend)
   common.v1.UserPlan _plan = 100;
