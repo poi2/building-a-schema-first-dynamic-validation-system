@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package post.v1;
+
+import "buf/validate/validate.proto";
+import "common/v1/common.proto";
+
+// Post entity
+message Post {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  string content = 4;
+  string created_at = 5;
+  string updated_at = 6;
+
+  // Context enrichment field (injected by backend)
+  common.v1.UserPlan _plan = 100;
+}
+
+// CreatePostRequest with CEL validation based on user plan
+message CreatePostRequest {
+  string user_id = 1 [(buf.validate.field).string.uuid = true];
+
+  string title = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 200
+  }];
+
+  // Content length varies by user plan (enforced via CEL)
+  string content = 3 [(buf.validate.field) = {
+    string: {
+      min_len: 1
+      max_len: 10000  // Maximum limit (ENTERPRISE)
+    }
+  }];
+
+  // Context enrichment field (injected by backend)
+  common.v1.UserPlan _plan = 100;
+}
+
+// CreatePostResponse
+message CreatePostResponse {
+  Post post = 1;
+}
+
+// ListPostsRequest
+message ListPostsRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3 [(buf.validate.field).int32 = {
+    gte: 1
+    lte: 100
+  }];
+}
+
+// ListPostsResponse
+message ListPostsResponse {
+  repeated Post posts = 1;
+  int32 total = 2;
+}
+
+// PostService
+service PostService {
+  rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
+  rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);
+}

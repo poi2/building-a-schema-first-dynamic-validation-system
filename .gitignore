@@ -27,3 +27,12 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+
+# Generated code
+pkg/gen/go/**/*.pb.go
+pkg/gen/go/**/*connect.go
+pkg/gen/ts/
+
+# Go
+go.sum
+go.work.sum

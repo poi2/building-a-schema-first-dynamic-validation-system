@@ -25,12 +25,23 @@ This project demonstrates a dynamic validation system where:
 * Docker and Docker Compose
 * Node.js 20+ (for local development)
 * Go 1.21+ (for local development)
+* Buf CLI (for proto code generation)
 
 ### Setup
 
 ```bash
-# Start all services
-docker compose up -d
+# 1. Generate code from proto files
+make proto-generate
+
+# 2. Download Go dependencies
+cd services/isr && go mod download && cd -
+cd services/be && go mod download && cd -
+
+# 3. Start all services
+make docker-up
+
+# 4. Check service health
+docker compose ps
 ```
 
 ### Connection Information
@@ -59,12 +70,69 @@ Detailed design documentation is available in the `docs/` directory:
 
 ## Development
 
+### Code Generation
+
+```bash
+# Generate code from proto files
+make proto-generate
+
+# Lint proto files
+make proto-lint
+```
+
+### Docker Commands
+
+```bash
+# Start all services
+make docker-up
+
+# Stop all services
+make docker-down
+
+# View logs
+make docker-logs
+
+# Clean up (remove volumes)
+make docker-clean
+```
+
+### Linting
+
 ```bash
 # Lint markdown files
 npm run lint:md
 
 # Auto-fix markdown issues
 npm run lint:md:fix
+```
+
+### Project Structure
+
+```
+celo/
+├── go.work              # Go Workspaces configuration
+├── package.json         # Node.js Workspaces configuration
+├── buf.yaml             # Buf configuration
+├── buf.gen.yaml         # Code generation settings
+├── Makefile             # Common development tasks
+├── docker-compose.yml   # Service orchestration
+├── proto/               # Proto definitions (single source of truth)
+│   ├── common/v1/
+│   ├── user/v1/
+│   ├── post/v1/
+│   └── isr/v1/
+├── pkg/
+│   └── gen/             # Generated code (shared module)
+│       ├── go/
+│       └── ts/
+├── services/
+│   ├── isr/             # Internal Schema Registry
+│   ├── be/              # Backend service
+│   ├── bff/             # Backend for Frontend
+│   └── fe/              # Frontend
+├── init-db/             # Database initialization scripts
+└── tests/
+    └── e2e/             # End-to-end tests
 ```
 
 ## License
