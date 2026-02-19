@@ -108,7 +108,7 @@ npm run lint:md:fix
 
 ### Project Structure
 
-```
+```text
 celo/
 ├── go.work              # Go Workspaces configuration
 ├── package.json         # Node.js Workspaces configuration
