@@ -25,7 +25,7 @@ This project demonstrates a dynamic validation system where:
 * Docker and Docker Compose
 * Node.js 20+ (for local development)
 * Go 1.21+ (for local development)
-* Buf CLI (for proto code generation)
+* [Buf CLI](https://docs.buf.build/installation) (for proto code generation)
 
 ### Setup
 
@@ -33,19 +33,14 @@ This project demonstrates a dynamic validation system where:
 # 1. Generate code from proto files
 make proto-generate
 
-# 2. Download Go dependencies
-cd services/isr && go mod download && cd -
-cd services/be && go mod download && cd -
+# 2. Start services
+docker compose up -d
 
-# 3. (Milestone 1) Start the database only
-docker compose up -d db
-
-# 3. (Milestones 2+) Start all services (requires service implementations)
-# Note: Full service orchestration won't work until later milestones
-# make docker-up
-
-# 4. Check database health
+# 3. Check service status
 docker compose ps
+
+# 4. Upload initial schema
+./scripts/upload-schema.sh 1.0.0
 ```
 
 ### Connection Information
@@ -84,6 +79,22 @@ make proto-generate
 make proto-lint
 ```
 
+### Testing
+
+```bash
+# Run all tests
+make test
+
+# Format code
+make fmt
+
+# Lint code
+make lint
+
+# Run all CI checks (lint, format, test)
+make ci
+```
+
 ### Docker Commands
 
 ```bash
@@ -98,6 +109,20 @@ make docker-logs
 
 # Clean up (remove volumes)
 make docker-clean
+```
+
+### Schema Management
+
+```bash
+# Upload schema to ISR
+./scripts/upload-schema.sh 1.0.0
+
+# Pull latest schema from ISR
+./scripts/pull-schema.sh 1 0
+
+# Or use make targets
+make schema-upload VERSION=1.0.0
+make schema-pull MAJOR=1 MINOR=0
 ```
 
 ### Linting

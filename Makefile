@@ -1,4 +1,4 @@
-.PHONY: help proto-generate proto-lint clean docker-up docker-down docker-logs docker-clean schema-upload schema-pull
+.PHONY: help proto-generate proto-lint clean docker-up docker-down docker-logs docker-clean schema-upload schema-pull test fmt lint ci
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -34,3 +34,23 @@ schema-upload: ## Upload schema to ISR (usage: make schema-upload VERSION=1.0.0)
 
 schema-pull: ## Pull latest schema from ISR (usage: make schema-pull MAJOR=1 MINOR=0)
 	@./scripts/pull-schema.sh $(MAJOR) $(MINOR)
+
+test: ## Run tests for all services
+	@echo "Running ISR tests..."
+	cd services/isr && go test -v -race -coverprofile=coverage.out ./...
+
+fmt: ## Format Go code
+	@echo "Formatting Go code..."
+	gofmt -s -w services/isr
+	cd services/isr && go mod tidy
+
+lint: proto-lint ## Lint proto files and Go code
+	@echo "Linting ISR service..."
+	cd services/isr && go vet ./...
+	@if command -v staticcheck >/dev/null 2>&1; then \
+		cd services/isr && staticcheck ./...; \
+	else \
+		echo "staticcheck not installed, skipping (install: go install honnef.co/go/tools/cmd/staticcheck@latest)"; \
+	fi
+
+ci: proto-lint fmt test ## Run all CI checks (lint, format, test)
