@@ -62,8 +62,8 @@ func run() error {
 
 	// Create HTTP server with Connect
 	mux := http.NewServeMux()
-	path, handler := isrv1connect.NewSchemaRegistryServiceHandler(schemaHandler)
-	mux.Handle(path, handler)
+	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(schemaHandler)
+	mux.Handle(path, connectHandler)
 
 	// Add health check endpoint
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
