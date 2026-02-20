@@ -2,26 +2,32 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
-
-	"errors"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	isrv1 "github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/isr/v1"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/model"
-	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/repository"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/version"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type SchemaHandler struct {
-	repo *repository.SchemaRepository
+// SchemaRepositoryInterface defines the repository methods used by the handler
+type SchemaRepositoryInterface interface {
+	Create(ctx context.Context, schema *model.Schema) error
+	GetByVersion(ctx context.Context, version string) (*model.Schema, error)
+	GetLatestPatch(ctx context.Context, major, minor int32) (*model.Schema, error)
+	VersionExists(ctx context.Context, version string) (bool, error)
 }
 
-func NewSchemaHandler(repo *repository.SchemaRepository) *SchemaHandler {
+type SchemaHandler struct {
+	repo SchemaRepositoryInterface
+}
+
+func NewSchemaHandler(repo SchemaRepositoryInterface) *SchemaHandler {
 	return &SchemaHandler{repo: repo}
 }
 
