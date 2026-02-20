@@ -24,10 +24,24 @@ func setupTestDB(t *testing.T) *pgxpool.Pool {
 		t.Skipf("Skipping test: cannot connect to test database: %v", err)
 	}
 
-	// Clean up test data
-	_, err = pool.Exec(context.Background(), "TRUNCATE TABLE schemas")
+	// Drop and recreate table with new schema
+	migration := `
+		DROP TABLE IF EXISTS schemas;
+		CREATE TABLE schemas (
+			id VARCHAR(36) PRIMARY KEY,
+			version VARCHAR(20) UNIQUE NOT NULL,
+			major INTEGER NOT NULL,
+			minor INTEGER NOT NULL,
+			patch INTEGER NOT NULL,
+			schema_binary BYTEA NOT NULL,
+			size_bytes INTEGER NOT NULL,
+			created_at TIMESTAMP NOT NULL
+		);
+		CREATE INDEX idx_schemas_semver ON schemas(major DESC, minor DESC, patch DESC);
+	`
+	_, err = pool.Exec(context.Background(), migration)
 	if err != nil {
-		t.Skipf("Skipping test: cannot clean database: %v", err)
+		t.Skipf("Skipping test: cannot setup database: %v", err)
 	}
 
 	return pool
@@ -42,6 +56,9 @@ func TestSchemaRepository_Create(t *testing.T) {
 	schema := &model.Schema{
 		ID:           "test-id-123",
 		Version:      "1.0.0",
+		Major:        1,
+		Minor:        0,
+		Patch:        0,
 		SchemaBinary: []byte("test binary data"),
 		SizeBytes:    16,
 		CreatedAt:    time.Now(),
@@ -74,18 +91,29 @@ func TestSchemaRepository_GetLatestPatch(t *testing.T) {
 	ctx := context.Background()
 
 	// Insert multiple versions
-	versions := []string{"1.0.0", "1.0.1", "1.0.2", "1.1.0"}
-	for _, version := range versions {
+	testVersions := []struct {
+		version       string
+		major, minor, patch int32
+	}{
+		{"1.0.0", 1, 0, 0},
+		{"1.0.1", 1, 0, 1},
+		{"1.0.2", 1, 0, 2},
+		{"1.1.0", 1, 1, 0},
+	}
+	for _, tv := range testVersions {
 		schema := &model.Schema{
-			ID:           "id-" + version,
-			Version:      version,
-			SchemaBinary: []byte("binary-" + version),
-			SizeBytes:    int32(len("binary-" + version)),
+			ID:           "id-" + tv.version,
+			Version:      tv.version,
+			Major:        tv.major,
+			Minor:        tv.minor,
+			Patch:        tv.patch,
+			SchemaBinary: []byte("binary-" + tv.version),
+			SizeBytes:    int32(len("binary-" + tv.version)),
 			CreatedAt:    time.Now(),
 		}
 		err := repo.Create(ctx, schema)
 		if err != nil {
-			t.Fatalf("Failed to create schema %s: %v", version, err)
+			t.Fatalf("Failed to create schema %s: %v", tv.version, err)
 		}
 	}
 
@@ -120,6 +148,9 @@ func TestSchemaRepository_VersionExists(t *testing.T) {
 	schema := &model.Schema{
 		ID:           "test-id",
 		Version:      "2.0.0",
+		Major:        2,
+		Minor:        0,
+		Patch:        0,
 		SchemaBinary: []byte("test"),
 		SizeBytes:    4,
 		CreatedAt:    time.Now(),

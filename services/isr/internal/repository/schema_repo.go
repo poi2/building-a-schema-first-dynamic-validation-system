@@ -19,12 +19,15 @@ func NewSchemaRepository(pool *pgxpool.Pool) *SchemaRepository {
 // Create inserts a new schema into the database
 func (r *SchemaRepository) Create(ctx context.Context, schema *model.Schema) error {
 	query := `
-		INSERT INTO schemas (id, version, schema_binary, size_bytes, created_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO schemas (id, version, major, minor, patch, schema_binary, size_bytes, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 	_, err := r.pool.Exec(ctx, query,
 		schema.ID,
 		schema.Version,
+		schema.Major,
+		schema.Minor,
+		schema.Patch,
 		schema.SchemaBinary,
 		schema.SizeBytes,
 		schema.CreatedAt,
@@ -38,7 +41,7 @@ func (r *SchemaRepository) Create(ctx context.Context, schema *model.Schema) err
 // GetByVersion retrieves a schema by its version
 func (r *SchemaRepository) GetByVersion(ctx context.Context, version string) (*model.Schema, error) {
 	query := `
-		SELECT id, version, schema_binary, size_bytes, created_at
+		SELECT id, version, major, minor, patch, schema_binary, size_bytes, created_at
 		FROM schemas
 		WHERE version = $1
 	`
@@ -46,6 +49,9 @@ func (r *SchemaRepository) GetByVersion(ctx context.Context, version string) (*m
 	err := r.pool.QueryRow(ctx, query, version).Scan(
 		&schema.ID,
 		&schema.Version,
+		&schema.Major,
+		&schema.Minor,
+		&schema.Patch,
 		&schema.SchemaBinary,
 		&schema.SizeBytes,
 		&schema.CreatedAt,
@@ -59,21 +65,20 @@ func (r *SchemaRepository) GetByVersion(ctx context.Context, version string) (*m
 // GetLatestPatch retrieves the latest patch version for a given major.minor
 func (r *SchemaRepository) GetLatestPatch(ctx context.Context, major, minor int32) (*model.Schema, error) {
 	query := `
-		SELECT id, version, schema_binary, size_bytes, created_at
+		SELECT id, version, major, minor, patch, schema_binary, size_bytes, created_at
 		FROM schemas
-		WHERE version LIKE $1
-		ORDER BY
-			split_part(version, '.', 1)::int DESC,
-			split_part(version, '.', 2)::int DESC,
-			split_part(version, '.', 3)::int DESC
+		WHERE major = $1 AND minor = $2
+		ORDER BY patch DESC
 		LIMIT 1
 	`
-	pattern := fmt.Sprintf("%d.%d.%%", major, minor)
 
 	var schema model.Schema
-	err := r.pool.QueryRow(ctx, query, pattern).Scan(
+	err := r.pool.QueryRow(ctx, query, major, minor).Scan(
 		&schema.ID,
 		&schema.Version,
+		&schema.Major,
+		&schema.Minor,
+		&schema.Patch,
 		&schema.SchemaBinary,
 		&schema.SizeBytes,
 		&schema.CreatedAt,

@@ -13,6 +13,7 @@ import (
 	isrv1 "github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/isr/v1"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/model"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/repository"
+	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/version"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -28,6 +29,12 @@ func (h *SchemaHandler) UploadSchema(
 	ctx context.Context,
 	req *connect.Request[isrv1.UploadSchemaRequest],
 ) (*connect.Response[isrv1.UploadSchemaResponse], error) {
+	// Parse semantic version
+	major, minor, patch, err := version.ParseSemVer(req.Msg.Version)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid version format: %w", err))
+	}
+
 	// Check if version already exists
 	exists, err := h.repo.VersionExists(ctx, req.Msg.Version)
 	if err != nil {
@@ -47,6 +54,9 @@ func (h *SchemaHandler) UploadSchema(
 	schema := &model.Schema{
 		ID:           id.String(),
 		Version:      req.Msg.Version,
+		Major:        major,
+		Minor:        minor,
+		Patch:        patch,
 		SchemaBinary: req.Msg.SchemaBinary,
 		SizeBytes:    int32(len(req.Msg.SchemaBinary)),
 		CreatedAt:    now,

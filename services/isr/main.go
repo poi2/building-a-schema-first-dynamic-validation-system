@@ -107,10 +107,15 @@ func runMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 		CREATE TABLE IF NOT EXISTS schemas (
 			id VARCHAR(36) PRIMARY KEY,
 			version VARCHAR(20) UNIQUE NOT NULL,
+			major INTEGER NOT NULL,
+			minor INTEGER NOT NULL,
+			patch INTEGER NOT NULL,
 			schema_binary BYTEA NOT NULL,
 			size_bytes INTEGER NOT NULL,
 			created_at TIMESTAMP NOT NULL
 		);
+
+		CREATE INDEX IF NOT EXISTS idx_schemas_semver ON schemas(major DESC, minor DESC, patch DESC);
 	`
 
 	_, err := pool.Exec(ctx, migration)
