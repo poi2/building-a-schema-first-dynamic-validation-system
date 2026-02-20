@@ -76,6 +76,14 @@ func TestSchemaHandler_UploadSchema_Success(t *testing.T) {
 	if resp.Msg.Metadata.SizeBytes != int32(len("test schema data")) {
 		t.Errorf("SizeBytes = %v, want %v", resp.Msg.Metadata.SizeBytes, len("test schema data"))
 	}
+	if resp.Msg.Metadata.Id == "" {
+		t.Errorf("Id is empty, want non-empty value")
+	}
+	if resp.Msg.Metadata.CreatedAt == nil {
+		t.Errorf("CreatedAt is nil, want non-nil value")
+	} else if resp.Msg.Metadata.CreatedAt.AsTime().IsZero() {
+		t.Errorf("CreatedAt is zero, want non-zero timestamp")
+	}
 }
 
 func TestSchemaHandler_UploadSchema_InvalidVersion(t *testing.T) {
@@ -160,6 +168,38 @@ func TestSchemaHandler_UploadSchema_RepositoryError(t *testing.T) {
 	}
 }
 
+func TestSchemaHandler_UploadSchema_CreateError(t *testing.T) {
+	mockRepo := &mockSchemaRepository{
+		versionExistsFunc: func(ctx context.Context, version string) (bool, error) {
+			return false, nil
+		},
+		createFunc: func(ctx context.Context, schema *model.Schema) error {
+			return errors.New("database error")
+		},
+	}
+
+	handler := NewSchemaHandler(mockRepo)
+
+	req := connect.NewRequest(&isrv1.UploadSchemaRequest{
+		Version:      "1.2.3",
+		SchemaBinary: []byte("test"),
+	})
+
+	_, err := handler.UploadSchema(context.Background(), req)
+	if err == nil {
+		t.Fatal("UploadSchema() error = nil, want error")
+	}
+
+	var connectErr *connect.Error
+	if !errors.As(err, &connectErr) {
+		t.Fatalf("error type = %T, want *connect.Error", err)
+	}
+
+	if connectErr.Code() != connect.CodeInternal {
+		t.Errorf("error code = %v, want %v", connectErr.Code(), connect.CodeInternal)
+	}
+}
+
 func TestSchemaHandler_GetLatestPatch_Success(t *testing.T) {
 	expectedSchema := &model.Schema{
 		ID:           "test-id",
@@ -198,6 +238,15 @@ func TestSchemaHandler_GetLatestPatch_Success(t *testing.T) {
 	}
 	if string(resp.Msg.SchemaBinary) != "test schema" {
 		t.Errorf("SchemaBinary = %v, want 'test schema'", string(resp.Msg.SchemaBinary))
+	}
+	if resp.Msg.Metadata.Id != "test-id" {
+		t.Errorf("Id = %v, want test-id", resp.Msg.Metadata.Id)
+	}
+	if resp.Msg.Metadata.SizeBytes != 11 {
+		t.Errorf("SizeBytes = %v, want 11", resp.Msg.Metadata.SizeBytes)
+	}
+	if resp.Msg.Metadata.CreatedAt == nil {
+		t.Errorf("CreatedAt is nil, want non-nil value")
 	}
 }
 
@@ -296,6 +345,15 @@ func TestSchemaHandler_GetSchemaByVersion_Success(t *testing.T) {
 	}
 	if string(resp.Msg.SchemaBinary) != "version 2.0.1 schema" {
 		t.Errorf("SchemaBinary = %v, want 'version 2.0.1 schema'", string(resp.Msg.SchemaBinary))
+	}
+	if resp.Msg.Metadata.Id != "test-id" {
+		t.Errorf("Id = %v, want test-id", resp.Msg.Metadata.Id)
+	}
+	if resp.Msg.Metadata.SizeBytes != 20 {
+		t.Errorf("SizeBytes = %v, want 20", resp.Msg.Metadata.SizeBytes)
+	}
+	if resp.Msg.Metadata.CreatedAt == nil {
+		t.Errorf("CreatedAt is nil, want non-nil value")
 	}
 }
 
