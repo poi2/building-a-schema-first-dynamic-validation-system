@@ -37,10 +37,14 @@ make proto-generate
 cd services/isr && go mod download && cd -
 cd services/be && go mod download && cd -
 
-# 3. Start all services
-make docker-up
+# 3. (Milestone 1) Start the database only
+docker compose up -d db
 
-# 4. Check service health
+# 3. (Milestones 2+) Start all services (requires service implementations)
+# Note: Full service orchestration won't work until later milestones
+# make docker-up
+
+# 4. Check database health
 docker compose ps
 ```
 
@@ -130,7 +134,7 @@ celo/
 │   ├── be/              # Backend service
 │   ├── bff/             # Backend for Frontend
 │   └── fe/              # Frontend
-├── init-db/             # Database initialization scripts
+├── docker/init-db/      # Database initialization scripts
 └── tests/
     └── e2e/             # End-to-end tests
 ```

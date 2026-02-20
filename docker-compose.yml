@@ -3,6 +3,8 @@ services:
     image: postgres:15-alpine
     container_name: celo-db
     environment:
+      # WARNING: Development-only credentials. Never use these in production.
+      # Production deployments should use secure credentials from secrets management.
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
@@ -17,64 +19,68 @@ services:
       timeout: 5s
       retries: 5
 
-  isr:
-    build:
-      context: .
-      dockerfile: services/isr/Dockerfile
-    container_name: celo-isr
-    environment:
-      CELO_DB_URL: postgres://postgres:postgres@db:5432/isr?sslmode=disable
-      CELO_PORT: 50051
-    ports:
-      - "50051:50051"
-    depends_on:
-      db:
-        condition: service_healthy
+  # Milestone 2+: ISR service (commented out until implementation)
+  # isr:
+  #   build:
+  #     context: .
+  #     dockerfile: services/isr/Dockerfile
+  #   container_name: celo-isr
+  #   environment:
+  #     CELO_DB_URL: postgres://postgres:postgres@db:5432/isr?sslmode=disable
+  #     CELO_PORT: 50051
+  #   ports:
+  #     - "50051:50051"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
 
-  be:
-    build:
-      context: .
-      dockerfile: services/be/Dockerfile
-    container_name: celo-be
-    environment:
-      CELO_DB_URL: postgres://postgres:postgres@db:5432/be?sslmode=disable
-      CELO_ISR_URL: isr:50051
-      CELO_PORT: 50052
-    ports:
-      - "50052:50052"
-    depends_on:
-      db:
-        condition: service_healthy
-      isr:
-        condition: service_started
+  # Milestone 3+: Backend service (commented out until implementation)
+  # be:
+  #   build:
+  #     context: .
+  #     dockerfile: services/be/Dockerfile
+  #   container_name: celo-be
+  #   environment:
+  #     CELO_DB_URL: postgres://postgres:postgres@db:5432/be?sslmode=disable
+  #     CELO_ISR_URL: isr:50051
+  #     CELO_PORT: 50052
+  #   ports:
+  #     - "50052:50052"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     isr:
+  #       condition: service_started
 
-  bff:
-    build:
-      context: .
-      dockerfile: services/bff/Dockerfile
-    container_name: celo-bff
-    environment:
-      CELO_BE_URL: http://be:50052
-      CELO_ISR_URL: isr:50051
-      CELO_PORT: 3001
-    ports:
-      - "3001:3001"
-    depends_on:
-      - be
-      - isr
+  # Milestone 4+: BFF service (commented out until implementation)
+  # bff:
+  #   build:
+  #     context: .
+  #     dockerfile: services/bff/Dockerfile
+  #   container_name: celo-bff
+  #   environment:
+  #     CELO_BE_URL: http://be:50052
+  #     CELO_ISR_URL: isr:50051
+  #     CELO_PORT: 3001
+  #   ports:
+  #     - "3001:3001"
+  #   depends_on:
+  #     - be
+  #     - isr
 
-  fe:
-    build:
-      context: .
-      dockerfile: services/fe/Dockerfile
-    container_name: celo-fe
-    environment:
-      CELO_BFF_URL: http://bff:3001
-      CELO_PORT: 3000
-    ports:
-      - "3000:3000"
-    depends_on:
-      - bff
+  # Milestone 4+: Frontend service (commented out until implementation)
+  # fe:
+  #   build:
+  #     context: .
+  #     dockerfile: services/fe/Dockerfile
+  #   container_name: celo-fe
+  #   environment:
+  #     CELO_BFF_URL: http://bff:3001
+  #     CELO_PORT: 3000
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - bff
 
 volumes:
   postgres_data:

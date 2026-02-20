@@ -13,7 +13,9 @@ proto-lint: ## Lint proto files using buf
 	buf lint
 
 clean: ## Clean generated code
-	rm -rf pkg/gen/go/**/*.pb.go pkg/gen/go/**/*connect.go pkg/gen/ts/
+	find pkg/gen/go -name '*.pb.go' -delete 2>/dev/null || true
+	find pkg/gen/go -name '*connect.go' -delete 2>/dev/null || true
+	rm -rf pkg/gen/ts/
 
 docker-up: ## Start all services with docker compose
 	docker compose up -d

@@ -1,5 +1,6 @@
 # Placeholder for Backend service Dockerfile
 # To be implemented in Milestone 3
+# NOTE: This Dockerfile is non-functional until ./cmd/server is implemented.
 
 FROM golang:1.21-alpine AS builder
 

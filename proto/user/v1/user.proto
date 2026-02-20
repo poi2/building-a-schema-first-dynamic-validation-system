@@ -4,6 +4,7 @@ package user.v1;
 
 import "buf/validate/validate.proto";
 import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
 
 // User entity
 message User {
@@ -16,9 +17,9 @@ message User {
     email: true
     max_len: 255
   }];
-  common.v1.UserPlan plan = 4;
-  string created_at = 5;
-  string updated_at = 6;
+  common.v1.UserPlan plan = 4 [(buf.validate.field).enum.defined_only = true];
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
 }
 
 // CreateUserRequest

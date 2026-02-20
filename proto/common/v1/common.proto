@@ -2,18 +2,6 @@ syntax = "proto3";
 
 package common.v1;
 
-import "google/protobuf/timestamp.proto";
-
-// UUID v7 identifier
-message UUID {
-  string value = 1;
-}
-
-// Timestamp wrapper
-message Timestamp {
-  google.protobuf.Timestamp value = 1;
-}
-
 // User plan types
 enum UserPlan {
   USER_PLAN_UNSPECIFIED = 0;

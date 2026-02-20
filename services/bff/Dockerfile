@@ -1,5 +1,6 @@
 # Placeholder for BFF service Dockerfile
 # To be implemented in Milestone 4
+# NOTE: This Dockerfile is non-functional until package.json and build scripts are implemented.
 
 FROM node:20-alpine AS builder
 
