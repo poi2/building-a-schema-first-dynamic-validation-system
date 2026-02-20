@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package common.v1;
+
+// User plan types
+enum UserPlan {
+  USER_PLAN_UNSPECIFIED = 0;
+  USER_PLAN_FREE = 1;
+  USER_PLAN_PRO = 2;
+  USER_PLAN_ENTERPRISE = 3;
+}

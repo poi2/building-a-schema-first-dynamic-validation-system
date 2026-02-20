@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package post.v1;
+
+import "buf/validate/validate.proto";
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+// Post entity
+message Post {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string user_id = 2 [(buf.validate.field).string.uuid = true];
+  string title = 3;
+  string content = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+
+  // Context enrichment field (injected by backend)
+  common.v1.UserPlan _user_plan = 1000;
+}
+
+// CreatePostRequest with CEL validation based on user plan
+message CreatePostRequest {
+  // Message-level CEL constraint for dynamic content length validation
+  option (buf.validate.message).cel = {
+    id: "content_length_by_plan"
+    message: "Content exceeds plan limit (FREE: 1000, PRO: 5000, ENTERPRISE/UNSPECIFIED: 10000 chars)"
+    expression:
+      "this._user_plan == 1 ? size(this.content) <= 1000 : "     // FREE: 1000 chars
+      "this._user_plan == 2 ? size(this.content) <= 5000 : "     // PRO: 5000 chars
+      "size(this.content) <= 10000"                              // ENTERPRISE/UNSPECIFIED: 10000 chars (default)
+  };
+
+  string user_id = 1 [(buf.validate.field).string.uuid = true];
+
+  string title = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 200
+  }];
+
+  // Content length varies by user plan (enforced via message-level CEL above)
+  string content = 3 [(buf.validate.field).string.min_len = 1];
+
+  // Context enrichment field (injected by backend)
+  common.v1.UserPlan _user_plan = 1000;
+}
+
+// CreatePostResponse
+message CreatePostResponse {
+  Post post = 1;
+}
+
+// ListPostsRequest
+message ListPostsRequest {
+  string user_id = 1 [(buf.validate.field).string.uuid = true];
+  int32 page = 2 [(buf.validate.field).int32 = { gte: 1 }];
+  int32 page_size = 3 [(buf.validate.field).int32 = {
+    gte: 1
+    lte: 100
+  }];
+}
+
+// ListPostsResponse
+message ListPostsResponse {
+  repeated Post posts = 1;
+  int32 total = 2;
+}
+
+// PostService
+service PostService {
+  rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
+  rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);
+}

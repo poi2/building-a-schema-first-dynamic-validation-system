@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "buf/validate/validate.proto";
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+// User entity
+message User {
+  string id = 1;
+  string name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  string email = 3 [(buf.validate.field).string = {
+    email: true
+    max_len: 255
+  }];
+  common.v1.UserPlan plan = 4 [(buf.validate.field).enum.defined_only = true];
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+// CreateUserRequest
+message CreateUserRequest {
+  string name = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  string email = 2 [(buf.validate.field).string = {
+    email: true
+    max_len: 255
+  }];
+  common.v1.UserPlan plan = 3;
+}
+
+// CreateUserResponse
+message CreateUserResponse {
+  User user = 1;
+}
+
+// ListUsersRequest
+message ListUsersRequest {
+  int32 page = 1 [(buf.validate.field).int32 = {
+    gte: 1
+  }];
+  int32 page_size = 2 [(buf.validate.field).int32 = {
+    gte: 1
+    lte: 100
+  }];
+}
+
+// ListUsersResponse
+message ListUsersResponse {
+  repeated User users = 1;
+  int32 total = 2;
+}
+
+// UserService
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+}

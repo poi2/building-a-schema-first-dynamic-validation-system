@@ -1,0 +1,7 @@
+go 1.21
+
+use (
+	./pkg/gen/go
+	./services/isr
+	./services/be
+)

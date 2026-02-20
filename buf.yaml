@@ -1,0 +1,16 @@
+version: v2
+modules:
+  - path: proto
+deps:
+  - buf.build/bufbuild/protovalidate
+  - buf.build/googleapis/googleapis
+lint:
+  use:
+    - STANDARD
+  except:
+    # Allow underscore-prefixed fields (e.g. _user_plan) for context enrichment.
+    # These fields are injected by the backend and not user-provided.
+    - FIELD_LOWER_SNAKE_CASE
+breaking:
+  use:
+    - FILE

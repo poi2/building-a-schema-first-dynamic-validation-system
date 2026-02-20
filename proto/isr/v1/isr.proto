@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package isr.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+// Schema metadata
+message SchemaMetadata {
+  string id = 1;           // UUID v7
+  string version = 2;      // SemVer (e.g., "1.2.3")
+  google.protobuf.Timestamp created_at = 3;
+  int32 size_bytes = 4;
+}
+
+// UploadSchemaRequest
+message UploadSchemaRequest {
+  string version = 1 [(buf.validate.field).string.pattern = "^\\d+\\.\\d+\\.\\d+$"];
+  bytes schema_binary = 2 [(buf.validate.field).bytes = {
+    min_len: 1
+    max_len: 10485760  // 10MB max to prevent resource exhaustion
+  }];
+}
+
+// UploadSchemaResponse
+message UploadSchemaResponse {
+  SchemaMetadata metadata = 1;
+}
+
+// GetLatestPatchRequest - Get latest patch version for given major.minor
+message GetLatestPatchRequest {
+  int32 major = 1 [(buf.validate.field).int32.gte = 0];
+  int32 minor = 2 [(buf.validate.field).int32.gte = 0];
+}
+
+// GetLatestPatchResponse
+message GetLatestPatchResponse {
+  SchemaMetadata metadata = 1;
+  bytes schema_binary = 2;
+}
+
+// GetSchemaByVersionRequest
+message GetSchemaByVersionRequest {
+  string version = 1 [(buf.validate.field).string.pattern = "^\\d+\\.\\d+\\.\\d+$"];
+}
+
+// GetSchemaByVersionResponse
+message GetSchemaByVersionResponse {
+  SchemaMetadata metadata = 1;
+  bytes schema_binary = 2;
+}
+
+// SchemaRegistryService
+service SchemaRegistryService {
+  rpc UploadSchema(UploadSchemaRequest) returns (UploadSchemaResponse);
+  rpc GetLatestPatch(GetLatestPatchRequest) returns (GetLatestPatchResponse);
+  rpc GetSchemaByVersion(GetSchemaByVersionRequest) returns (GetSchemaByVersionResponse);
+}
