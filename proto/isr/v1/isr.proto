@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package isr.v1;
 
+option go_package = "github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/isr/v1;isrv1";
+
 import "buf/validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 

@@ -1,7 +1,3 @@
-# Placeholder for ISR service Dockerfile
-# To be implemented in Milestone 2
-# NOTE: This Dockerfile is non-functional until ./cmd/server is implemented.
-
 FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
@@ -18,7 +14,7 @@ COPY services/isr services/isr
 # Build the service
 WORKDIR /app/services/isr
 RUN go mod download
-RUN go build -o /app/isr ./cmd/server
+RUN go build -o /app/isr .
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates

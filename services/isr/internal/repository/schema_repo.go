@@ -1,0 +1,93 @@
+package repository
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/model"
+)
+
+type SchemaRepository struct {
+	pool *pgxpool.Pool
+}
+
+func NewSchemaRepository(pool *pgxpool.Pool) *SchemaRepository {
+	return &SchemaRepository{pool: pool}
+}
+
+// Create inserts a new schema into the database
+func (r *SchemaRepository) Create(ctx context.Context, schema *model.Schema) error {
+	query := `
+		INSERT INTO schemas (id, version, schema_binary, size_bytes, created_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`
+	_, err := r.pool.Exec(ctx, query,
+		schema.ID,
+		schema.Version,
+		schema.SchemaBinary,
+		schema.SizeBytes,
+		schema.CreatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert schema: %w", err)
+	}
+	return nil
+}
+
+// GetByVersion retrieves a schema by its version
+func (r *SchemaRepository) GetByVersion(ctx context.Context, version string) (*model.Schema, error) {
+	query := `
+		SELECT id, version, schema_binary, size_bytes, created_at
+		FROM schemas
+		WHERE version = $1
+	`
+	var schema model.Schema
+	err := r.pool.QueryRow(ctx, query, version).Scan(
+		&schema.ID,
+		&schema.Version,
+		&schema.SchemaBinary,
+		&schema.SizeBytes,
+		&schema.CreatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get schema by version: %w", err)
+	}
+	return &schema, nil
+}
+
+// GetLatestPatch retrieves the latest patch version for a given major.minor
+func (r *SchemaRepository) GetLatestPatch(ctx context.Context, major, minor int32) (*model.Schema, error) {
+	query := `
+		SELECT id, version, schema_binary, size_bytes, created_at
+		FROM schemas
+		WHERE version LIKE $1
+		ORDER BY version DESC
+		LIMIT 1
+	`
+	pattern := fmt.Sprintf("%d.%d.%%", major, minor)
+
+	var schema model.Schema
+	err := r.pool.QueryRow(ctx, query, pattern).Scan(
+		&schema.ID,
+		&schema.Version,
+		&schema.SchemaBinary,
+		&schema.SizeBytes,
+		&schema.CreatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest patch: %w", err)
+	}
+	return &schema, nil
+}
+
+// VersionExists checks if a version already exists
+func (r *SchemaRepository) VersionExists(ctx context.Context, version string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM schemas WHERE version = $1)`
+	var exists bool
+	err := r.pool.QueryRow(ctx, query, version).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to check version existence: %w", err)
+	}
+	return exists, nil
+}

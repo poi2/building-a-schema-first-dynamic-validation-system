@@ -1,4 +1,4 @@
-.PHONY: help proto-generate proto-lint clean docker-up docker-down docker-logs docker-clean
+.PHONY: help proto-generate proto-lint clean docker-up docker-down docker-logs docker-clean schema-upload schema-pull
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -28,3 +28,9 @@ docker-logs: ## Show logs from all services
 
 docker-clean: ## Stop services and remove volumes
 	docker compose down -v
+
+schema-upload: ## Upload schema to ISR (usage: make schema-upload VERSION=1.0.0)
+	@./scripts/upload-schema.sh $(VERSION)
+
+schema-pull: ## Pull latest schema from ISR (usage: make schema-pull MAJOR=1 MINOR=0)
+	@./scripts/pull-schema.sh $(MAJOR) $(MINOR)

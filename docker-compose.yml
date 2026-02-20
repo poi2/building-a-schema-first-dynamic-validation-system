@@ -19,20 +19,20 @@ services:
       timeout: 5s
       retries: 5
 
-  # Milestone 2+: ISR service (commented out until implementation)
-  # isr:
-  #   build:
-  #     context: .
-  #     dockerfile: services/isr/Dockerfile
-  #   container_name: celo-isr
-  #   environment:
-  #     CELO_DB_URL: postgres://postgres:postgres@db:5432/isr?sslmode=disable
-  #     CELO_PORT: 50051
-  #   ports:
-  #     - "50051:50051"
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  # ISR service
+  isr:
+    build:
+      context: .
+      dockerfile: services/isr/Dockerfile
+    container_name: celo-isr
+    environment:
+      CELO_DB_URL: postgres://postgres:postgres@db:5432/isr?sslmode=disable
+      CELO_PORT: 50051
+    ports:
+      - "50051:50051"
+    depends_on:
+      db:
+        condition: service_healthy
 
   # Milestone 3+: Backend service (commented out until implementation)
   # be:
