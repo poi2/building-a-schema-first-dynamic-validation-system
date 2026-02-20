@@ -13,11 +13,11 @@ COPY services/fe services/fe
 RUN npm ci
 
 # Build the service
-WORKDIR /app/services/bff
+WORKDIR /app/services/fe
 RUN npm run build
 
 FROM node:20-alpine
-RUN npm install -g serve
+RUN npm install -g serve@14.2.4
 WORKDIR /app
 COPY --from=builder /app/services/fe/dist ./dist
 

@@ -41,7 +41,9 @@ message CreateUserResponse {
 
 // ListUsersRequest
 message ListUsersRequest {
-  int32 page = 1;
+  int32 page = 1 [(buf.validate.field).int32 = {
+    gte: 1
+  }];
   int32 page_size = 2 [(buf.validate.field).int32 = {
     gte: 1
     lte: 100

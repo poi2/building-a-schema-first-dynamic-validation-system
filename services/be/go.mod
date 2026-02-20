@@ -14,7 +14,6 @@ require (
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.35.2-20241127180247-a33202765966.1 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/google/cel-go v0.22.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

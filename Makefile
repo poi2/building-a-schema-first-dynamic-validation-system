@@ -1,4 +1,4 @@
-.PHONY: help proto-generate proto-lint clean docker-up docker-down
+.PHONY: help proto-generate proto-lint clean docker-up docker-down docker-logs docker-clean
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'

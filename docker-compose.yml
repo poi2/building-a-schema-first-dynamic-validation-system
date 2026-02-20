@@ -55,7 +55,7 @@ services:
     container_name: celo-bff
     environment:
       CELO_BE_URL: http://be:50052
-      CELO_ISR_URL: http://isr:50051
+      CELO_ISR_URL: isr:50051
       CELO_PORT: 3001
     ports:
       - "3001:3001"
