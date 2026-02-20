@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"errors"
+
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	isrv1 "github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/isr/v1"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/model"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/repository"
@@ -71,7 +74,10 @@ func (h *SchemaHandler) GetLatestPatch(
 ) (*connect.Response[isrv1.GetLatestPatchResponse], error) {
 	schema, err := h.repo.GetLatestPatch(ctx, req.Msg.Major, req.Msg.Minor)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("schema not found: %w", err))
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("schema not found for version %d.%d", req.Msg.Major, req.Msg.Minor))
+		}
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get schema: %w", err))
 	}
 
 	resp := &isrv1.GetLatestPatchResponse{
@@ -93,7 +99,10 @@ func (h *SchemaHandler) GetSchemaByVersion(
 ) (*connect.Response[isrv1.GetSchemaByVersionResponse], error) {
 	schema, err := h.repo.GetByVersion(ctx, req.Msg.Version)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("schema not found: %w", err))
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("schema version %s not found", req.Msg.Version))
+		}
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get schema: %w", err))
 	}
 
 	resp := &isrv1.GetSchemaByVersionResponse{

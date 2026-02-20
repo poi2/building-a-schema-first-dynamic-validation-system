@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -12,7 +13,12 @@ import (
 func setupTestDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 
-	dbURL := "postgres://postgres:postgres@localhost:5433/isr?sslmode=disable"
+	// Read from environment variable with fallback to default
+	dbURL := os.Getenv("CELO_DB_URL")
+	if dbURL == "" {
+		dbURL = "postgres://postgres:postgres@localhost:5433/isr?sslmode=disable"
+	}
+
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
 		t.Skipf("Skipping test: cannot connect to test database: %v", err)

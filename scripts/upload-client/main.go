@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"connectrpc.com/connect"
@@ -27,6 +28,9 @@ func main() {
 	isrURL := os.Getenv("CELO_ISR_URL")
 	if isrURL == "" {
 		isrURL = "http://localhost:50051"
+	} else if !strings.HasPrefix(isrURL, "http://") && !strings.HasPrefix(isrURL, "https://") {
+		// Add http:// if scheme is missing
+		isrURL = "http://" + isrURL
 	}
 
 	// Read schema binary

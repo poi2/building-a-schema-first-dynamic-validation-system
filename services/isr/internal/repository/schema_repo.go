@@ -62,7 +62,10 @@ func (r *SchemaRepository) GetLatestPatch(ctx context.Context, major, minor int3
 		SELECT id, version, schema_binary, size_bytes, created_at
 		FROM schemas
 		WHERE version LIKE $1
-		ORDER BY version DESC
+		ORDER BY
+			split_part(version, '.', 1)::int DESC,
+			split_part(version, '.', 2)::int DESC,
+			split_part(version, '.', 3)::int DESC
 		LIMIT 1
 	`
 	pattern := fmt.Sprintf("%d.%d.%%", major, minor)

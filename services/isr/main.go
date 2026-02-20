@@ -111,8 +111,6 @@ func runMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 			size_bytes INTEGER NOT NULL,
 			created_at TIMESTAMP NOT NULL
 		);
-
-		CREATE INDEX IF NOT EXISTS idx_schemas_version ON schemas(version);
 	`
 
 	_, err := pool.Exec(ctx, migration)

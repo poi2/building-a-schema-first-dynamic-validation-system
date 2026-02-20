@@ -16,7 +16,7 @@ WORKDIR /app/services/isr
 RUN go mod download
 RUN go build -o /app/isr .
 
-FROM alpine:latest
+FROM alpine:3.21
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /app/isr .
