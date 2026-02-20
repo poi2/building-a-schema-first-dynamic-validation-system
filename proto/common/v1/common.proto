@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package common.v1;
 
+option go_package = "github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/common/v1;commonv1";
+
 // User plan types
 enum UserPlan {
   USER_PLAN_UNSPECIFIED = 0;

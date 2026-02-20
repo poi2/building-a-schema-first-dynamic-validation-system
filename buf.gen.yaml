@@ -1,9 +1,6 @@
 version: v2
 managed:
-  enabled: true
-  override:
-    - file_option: go_package_prefix
-      value: github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go
+  enabled: false
 plugins:
   - remote: buf.build/protocolbuffers/go
     out: pkg/gen/go

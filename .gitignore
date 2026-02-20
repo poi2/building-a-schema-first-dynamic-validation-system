@@ -36,3 +36,5 @@ pkg/gen/ts/
 # Go
 go.sum
 go.work.sum
+coverage.out
+coverage.html
