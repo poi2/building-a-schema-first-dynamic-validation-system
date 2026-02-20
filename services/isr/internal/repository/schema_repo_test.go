@@ -92,7 +92,7 @@ func TestSchemaRepository_GetLatestPatch(t *testing.T) {
 
 	// Insert multiple versions
 	testVersions := []struct {
-		version       string
+		version             string
 		major, minor, patch int32
 	}{
 		{"1.0.0", 1, 0, 0},
