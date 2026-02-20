@@ -14,17 +14,17 @@ func ParseSemVer(version string) (major, minor, patch int32, err error) {
 		return 0, 0, 0, fmt.Errorf("invalid version format: expected 3 parts, got %d", len(parts))
 	}
 
-	majorInt, err := strconv.Atoi(parts[0])
+	majorInt, err := strconv.ParseInt(parts[0], 10, 32)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("invalid major version: %w", err)
 	}
 
-	minorInt, err := strconv.Atoi(parts[1])
+	minorInt, err := strconv.ParseInt(parts[1], 10, 32)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("invalid minor version: %w", err)
 	}
 
-	patchInt, err := strconv.Atoi(parts[2])
+	patchInt, err := strconv.ParseInt(parts[2], 10, 32)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("invalid patch version: %w", err)
 	}

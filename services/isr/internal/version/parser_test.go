@@ -67,6 +67,29 @@ func TestParseSemVer(t *testing.T) {
 			version: "1.-2.3",
 			wantErr: true,
 		},
+		{
+			name:    "int32 overflow major",
+			version: "2147483648.0.0",
+			wantErr: true,
+		},
+		{
+			name:    "int32 overflow minor",
+			version: "0.2147483648.0",
+			wantErr: true,
+		},
+		{
+			name:    "int32 overflow patch",
+			version: "0.0.2147483648",
+			wantErr: true,
+		},
+		{
+			name:      "int32 max valid",
+			version:   "2147483647.2147483647.2147483647",
+			wantMajor: 2147483647,
+			wantMinor: 2147483647,
+			wantPatch: 2147483647,
+			wantErr:   false,
+		},
 	}
 
 	for _, tt := range tests {
