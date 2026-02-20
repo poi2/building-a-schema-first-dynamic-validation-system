@@ -1,34 +1,11 @@
 package handler
 
 import (
-	"context"
 	"testing"
 
 	"connectrpc.com/connect"
 	isrv1 "github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/isr/v1"
 )
-
-// Mock repository for testing
-type mockSchemaRepository struct {
-	versionExists bool
-	createErr     error
-}
-
-func (m *mockSchemaRepository) Create(ctx context.Context, schema interface{}) error {
-	return m.createErr
-}
-
-func (m *mockSchemaRepository) GetByVersion(ctx context.Context, version string) (interface{}, error) {
-	return nil, nil
-}
-
-func (m *mockSchemaRepository) GetLatestPatch(ctx context.Context, major, minor int32) (interface{}, error) {
-	return nil, nil
-}
-
-func (m *mockSchemaRepository) VersionExists(ctx context.Context, version string) (bool, error) {
-	return m.versionExists, nil
-}
 
 func TestSchemaHandler_UploadSchema_InvalidVersion(t *testing.T) {
 	// This test verifies that protovalidate will reject invalid versions
