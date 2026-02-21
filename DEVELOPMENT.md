@@ -20,7 +20,7 @@ Please install the following tools:
 
 - **Docker & Docker Compose**: Container environment
 - **Node.js 20+**: For BFF/FE development
-- **Go 1.23+**: For Backend/ISR development
+- **Go 1.24+**: For Backend/ISR development
 - **Buf CLI**: Proto code generation
   - Installation: <https://docs.buf.build/installation>
 
@@ -59,12 +59,11 @@ docker compose ps
 ├── pkg/gen/                 # Generated code (shared modules)
 │   ├── go/                  # Go generated code
 │   └── ts/                  # TypeScript generated code
-├── services/
-│   ├── isr/                 # Internal Schema Registry (Go)
-│   ├── be/                  # Backend service (Go)
-│   ├── bff/                 # Backend for Frontend (Node.js)
-│   └── fe/                  # Frontend (React)
-└── tests/e2e/               # End-to-end tests
+└── services/
+    ├── isr/                 # Internal Schema Registry (Go)
+    ├── be/                  # Backend service (Go) - planned
+    ├── bff/                 # Backend for Frontend (Node.js) - planned
+    └── fe/                  # Frontend (React) - planned
 ```
 
 ## Git Hooks
@@ -188,7 +187,7 @@ When a PR is created, the following checks run automatically:
 - **Proto Lint**: `buf lint`
 - **Go Test**: `go test -v -race -coverprofile=coverage.out ./...`
 - **Go Lint**: `go vet` + `staticcheck`
-- **Build Docker Image**: `docker compose build`
+- **Build Docker Image**: `docker compose build isr`
 
 All checks must pass before merging.
 
@@ -290,23 +289,6 @@ go tool cover -html=coverage.out
 
 # Specific package only
 go test ./internal/handler -v
-```
-
-### TypeScript
-
-```bash
-# Unit tests
-npm test
-
-# With coverage
-npm run test:coverage
-```
-
-### E2E Tests
-
-```bash
-# Run scenario tests with Playwright (planned for future)
-npm run test:e2e
 ```
 
 ## PR Creation and Review
