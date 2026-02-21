@@ -1,6 +1,6 @@
 module github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr
 
-go 1.24.0
+go 1.23
 
 require (
 	connectrpc.com/connect v1.19.0
