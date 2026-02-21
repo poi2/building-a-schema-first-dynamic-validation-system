@@ -24,7 +24,7 @@ This project demonstrates a dynamic validation system where:
 
 * Docker and Docker Compose
 * Node.js 20+ (for local development)
-* Go 1.21+ (for local development)
+* Go 1.24+ (for local development)
 * [Buf CLI](https://docs.buf.build/installation) (for proto code generation)
 
 ### Setup
@@ -52,7 +52,7 @@ docker compose ps
 
 ### For Developers
 
-* **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Setup, Git hooks, coding conventions, and contribution workflow
+* **[Development Guide](DEVELOPMENT.md)** - Setup, Git hooks, coding conventions, and contribution workflow
 
 ### Design Documentation
 
