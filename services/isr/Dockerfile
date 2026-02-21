@@ -13,6 +13,7 @@ COPY services/isr services/isr
 
 # Build the service
 WORKDIR /app/services/isr
+ENV GOTOOLCHAIN=auto
 RUN go mod download
 RUN go build -o /app/isr .
 
