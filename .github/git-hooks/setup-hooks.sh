@@ -4,13 +4,14 @@ set -euo pipefail
 # Determine paths based on script location
 SCRIPT_DIR=$(dirname "$0")
 HOOK_SOURCE="$SCRIPT_DIR/commit-msg"
-HOOK_DEST=".git/hooks/commit-msg"
+HOOKS_DIR=$(git rev-parse --git-path hooks)
+HOOK_DEST="$HOOKS_DIR/commit-msg"
 
 echo "Configuring git hooks from .github/git-hooks/..."
 
-# Check if .git/hooks directory exists (running from repository root)
-if [ ! -d ".git" ]; then
-    echo "Error: .git directory not found. Please run this from the repository root."
+# Check if we're in a git repository
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    echo "Error: Not in a git repository. Please run this from the repository root."
     exit 1
 fi
 

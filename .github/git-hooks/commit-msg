@@ -2,8 +2,8 @@
 
 COMMIT_MSG_FILE=$1
 
-# Skip validation for merge commits
-if [ -f ".git/MERGE_HEAD" ]; then
+# Skip validation for merge commits (works with normal repos and worktrees)
+if git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
     exit 0
 fi
 
