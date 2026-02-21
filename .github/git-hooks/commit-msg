@@ -3,17 +3,17 @@
 COMMIT_MSG_FILE=$1
 COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 
-# 1. 行数チェック
+# 1. Check line count
 LINE_COUNT=$(grep -c $'^' "$COMMIT_MSG_FILE")
 if [ "$LINE_COUNT" -gt 1 ]; then
-    echo -e "\033[31mError: コミットメッセージは1行で記述してください（現在 ${LINE_COUNT} 行）。\033[0m"
+    echo -e "\033[31mError: Commit message must be a single line (currently ${LINE_COUNT} lines).\033[0m"
     exit 1
 fi
 
-# 2. Conventional Commits 形式チェック
+# 2. Check Conventional Commits format
 PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.*\))?(!?): .+"
 if [[ ! $COMMIT_MSG =~ $PATTERN ]]; then
-    echo -e "\033[31mError: Conventional Commits の形式に従ってください。\n例: feat: add new feature\033[0m"
+    echo -e "\033[31mError: Commit message must follow Conventional Commits format.\nExample: feat: add new feature\033[0m"
     exit 1
 fi
 

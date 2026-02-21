@@ -1,19 +1,19 @@
 #!/bin/bash
 
-# スクリプトの場所を基準にパスを特定
+# Determine paths based on script location
 SCRIPT_DIR=$(dirname "$0")
 HOOK_SOURCE="$SCRIPT_DIR/commit-msg"
 HOOK_DEST=".git/hooks/commit-msg"
 
 echo "Configuring git hooks from .github/git-hooks/..."
 
-# .git/hooks ディレクトリがあるか確認（リポジトリルートで実行されているか）
+# Check if .git/hooks directory exists (running from repository root)
 if [ ! -d ".git" ]; then
     echo "Error: .git directory not found. Please run this from the repository root."
     exit 1
 fi
 
-# フックファイルをコピーして実行権限を付与
+# Copy hook file and make it executable
 cp "$HOOK_SOURCE" "$HOOK_DEST"
 chmod +x "$HOOK_DEST"
 
