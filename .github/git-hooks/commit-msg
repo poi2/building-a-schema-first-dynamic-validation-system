@@ -1,0 +1,21 @@
+#!/bin/bash
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# 1. 行数チェック
+LINE_COUNT=$(grep -c $'^' "$COMMIT_MSG_FILE")
+if [ "$LINE_COUNT" -gt 1 ]; then
+    echo -e "\033[31mError: コミットメッセージは1行で記述してください（現在 ${LINE_COUNT} 行）。\033[0m"
+    exit 1
+fi
+
+# 2. Conventional Commits 形式チェック
+PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.*\))?(!?): .+"
+if [[ ! $COMMIT_MSG =~ $PATTERN ]]; then
+    echo -e "\033[31mError: Conventional Commits の形式に従ってください。\n例: feat: add new feature\033[0m"
+    exit 1
+fi
+
+exit 0
+
