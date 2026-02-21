@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"connectrpc.com/connect"
+	"connectrpc.com/validate"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/isr/v1/isrv1connect"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/handler"
@@ -62,7 +64,10 @@ func run() error {
 
 	// Create HTTP server with Connect
 	mux := http.NewServeMux()
-	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(schemaHandler)
+	interceptors := connect.WithInterceptors(
+		validate.NewInterceptor(),
+	)
+	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(schemaHandler, interceptors)
 	mux.Handle(path, connectHandler)
 
 	// Add health check endpoint
