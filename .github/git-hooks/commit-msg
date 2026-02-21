@@ -1,10 +1,17 @@
 #!/bin/bash
 
 COMMIT_MSG_FILE=$1
-COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 
-# 1. Check line count
-LINE_COUNT=$(grep -c $'^' "$COMMIT_MSG_FILE")
+# Skip validation for merge commits
+if [ -f ".git/MERGE_HEAD" ]; then
+    exit 0
+fi
+
+# Read commit message and filter out comment lines
+COMMIT_MSG=$(grep -v '^#' "$COMMIT_MSG_FILE" | grep -v '^[[:space:]]*$' | head -1)
+
+# 1. Check line count (excluding comments and empty lines)
+LINE_COUNT=$(grep -v '^#' "$COMMIT_MSG_FILE" | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
 if [ "$LINE_COUNT" -gt 1 ]; then
     echo -e "\033[31mError: Commit message must be a single line (currently ${LINE_COUNT} lines).\033[0m"
     exit 1
