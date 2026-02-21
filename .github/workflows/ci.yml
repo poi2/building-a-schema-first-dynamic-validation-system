@@ -45,10 +45,12 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.23'
           cache-dependency-path: |
             services/isr/go.sum
             pkg/gen/go/go.sum
+        env:
+          GOTOOLCHAIN: auto
 
       - name: Setup Buf
         uses: bufbuild/buf-setup-action@v1
@@ -103,7 +105,9 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.23'
+        env:
+          GOTOOLCHAIN: auto
 
       - name: Setup Buf
         uses: bufbuild/buf-setup-action@v1

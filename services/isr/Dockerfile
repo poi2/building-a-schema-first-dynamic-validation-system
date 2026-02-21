@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
@@ -13,6 +13,7 @@ COPY services/isr services/isr
 
 # Build the service
 WORKDIR /app/services/isr
+ENV GOTOOLCHAIN=auto
 RUN go mod download
 RUN go build -o /app/isr .
 
