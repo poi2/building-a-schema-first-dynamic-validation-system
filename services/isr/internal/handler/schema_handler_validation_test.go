@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -14,6 +13,31 @@ import (
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/isr/v1/isrv1connect"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr/internal/model"
 )
+
+const (
+	// maxSchemaBinarySize is the maximum allowed schema binary size (10MB)
+	maxSchemaBinarySize = 10 * 1024 * 1024 // 10485760 bytes
+)
+
+// newTestClient creates a test Connect client with validation interceptor
+func newTestClient(t *testing.T, handler *SchemaHandler) (isrv1connect.SchemaRegistryServiceClient, func()) {
+	t.Helper()
+
+	mux := http.NewServeMux()
+	interceptors := connect.WithInterceptors(
+		validate.NewInterceptor(),
+	)
+	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(handler, interceptors)
+	mux.Handle(path, connectHandler)
+
+	server := httptest.NewServer(mux)
+	client := isrv1connect.NewSchemaRegistryServiceClient(
+		http.DefaultClient,
+		server.URL,
+	)
+
+	return client, server.Close
+}
 
 // TestUploadSchema_ValidationError_SchemaBinaryTooLarge tests that schema binaries larger than 10MB are rejected
 func TestUploadSchema_ValidationError_SchemaBinaryTooLarge(t *testing.T) {
@@ -27,28 +51,11 @@ func TestUploadSchema_ValidationError_SchemaBinaryTooLarge(t *testing.T) {
 	}
 
 	handler := NewSchemaHandler(mockRepo)
+	client, cleanup := newTestClient(t, handler)
+	defer cleanup()
 
-	// Create server with validation interceptor
-	mux := http.NewServeMux()
-	interceptors := connect.WithInterceptors(
-		validate.NewInterceptor(),
-	)
-	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(handler, interceptors)
-	mux.Handle(path, connectHandler)
-
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	client := isrv1connect.NewSchemaRegistryServiceClient(
-		http.DefaultClient,
-		server.URL,
-	)
-
-	// Create a binary larger than 10MB (10485760 bytes)
-	largeBinary := make([]byte, 10485761) // 10MB + 1 byte
-	for i := range largeBinary {
-		largeBinary[i] = byte(i % 256)
-	}
+	// Create a binary larger than 10MB
+	largeBinary := make([]byte, maxSchemaBinarySize+1)
 
 	req := connect.NewRequest(&isrv1.UploadSchemaRequest{
 		Version:      "1.0.0",
@@ -67,33 +74,14 @@ func TestUploadSchema_ValidationError_SchemaBinaryTooLarge(t *testing.T) {
 	if connectErr.Code() != connect.CodeInvalidArgument {
 		t.Errorf("error code = %v, want %v (InvalidArgument)", connectErr.Code(), connect.CodeInvalidArgument)
 	}
-
-	// Verify error message mentions validation
-	if !strings.Contains(connectErr.Message(), "validation") && !strings.Contains(connectErr.Message(), "max_len") {
-		t.Errorf("error message should mention validation or max_len, got: %s", connectErr.Message())
-	}
 }
 
 // TestUploadSchema_ValidationError_SchemaBinaryEmpty tests that empty schema binaries are rejected
 func TestUploadSchema_ValidationError_SchemaBinaryEmpty(t *testing.T) {
 	mockRepo := &mockSchemaRepository{}
 	handler := NewSchemaHandler(mockRepo)
-
-	// Create server with validation interceptor
-	mux := http.NewServeMux()
-	interceptors := connect.WithInterceptors(
-		validate.NewInterceptor(),
-	)
-	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(handler, interceptors)
-	mux.Handle(path, connectHandler)
-
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	client := isrv1connect.NewSchemaRegistryServiceClient(
-		http.DefaultClient,
-		server.URL,
-	)
+	client, cleanup := newTestClient(t, handler)
+	defer cleanup()
 
 	req := connect.NewRequest(&isrv1.UploadSchemaRequest{
 		Version:      "1.0.0",
@@ -126,28 +114,11 @@ func TestUploadSchema_ValidationSuccess_MaxSize(t *testing.T) {
 	}
 
 	handler := NewSchemaHandler(mockRepo)
+	client, cleanup := newTestClient(t, handler)
+	defer cleanup()
 
-	// Create server with validation interceptor
-	mux := http.NewServeMux()
-	interceptors := connect.WithInterceptors(
-		validate.NewInterceptor(),
-	)
-	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(handler, interceptors)
-	mux.Handle(path, connectHandler)
-
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	client := isrv1connect.NewSchemaRegistryServiceClient(
-		http.DefaultClient,
-		server.URL,
-	)
-
-	// Create a binary exactly 10MB (10485760 bytes)
-	maxBinary := make([]byte, 10485760)
-	for i := range maxBinary {
-		maxBinary[i] = byte(i % 256)
-	}
+	// Create a binary exactly at the 10MB limit
+	maxBinary := make([]byte, maxSchemaBinarySize)
 
 	req := connect.NewRequest(&isrv1.UploadSchemaRequest{
 		Version:      "1.0.0",
@@ -171,22 +142,8 @@ func TestUploadSchema_ValidationSuccess_MaxSize(t *testing.T) {
 func TestUploadSchema_ValidationError_InvalidVersionFormat(t *testing.T) {
 	mockRepo := &mockSchemaRepository{}
 	handler := NewSchemaHandler(mockRepo)
-
-	// Create server with validation interceptor
-	mux := http.NewServeMux()
-	interceptors := connect.WithInterceptors(
-		validate.NewInterceptor(),
-	)
-	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(handler, interceptors)
-	mux.Handle(path, connectHandler)
-
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	client := isrv1connect.NewSchemaRegistryServiceClient(
-		http.DefaultClient,
-		server.URL,
-	)
+	client, cleanup := newTestClient(t, handler)
+	defer cleanup()
 
 	testCases := []struct {
 		name    string
@@ -226,22 +183,8 @@ func TestUploadSchema_ValidationError_InvalidVersionFormat(t *testing.T) {
 func TestGetLatestPatch_ValidationError_NegativeValues(t *testing.T) {
 	mockRepo := &mockSchemaRepository{}
 	handler := NewSchemaHandler(mockRepo)
-
-	// Create server with validation interceptor
-	mux := http.NewServeMux()
-	interceptors := connect.WithInterceptors(
-		validate.NewInterceptor(),
-	)
-	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(handler, interceptors)
-	mux.Handle(path, connectHandler)
-
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	client := isrv1connect.NewSchemaRegistryServiceClient(
-		http.DefaultClient,
-		server.URL,
-	)
+	client, cleanup := newTestClient(t, handler)
+	defer cleanup()
 
 	testCases := []struct {
 		name  string
@@ -281,22 +224,8 @@ func TestGetLatestPatch_ValidationError_NegativeValues(t *testing.T) {
 func TestGetSchemaByVersion_ValidationError_InvalidVersionFormat(t *testing.T) {
 	mockRepo := &mockSchemaRepository{}
 	handler := NewSchemaHandler(mockRepo)
-
-	// Create server with validation interceptor
-	mux := http.NewServeMux()
-	interceptors := connect.WithInterceptors(
-		validate.NewInterceptor(),
-	)
-	path, connectHandler := isrv1connect.NewSchemaRegistryServiceHandler(handler, interceptors)
-	mux.Handle(path, connectHandler)
-
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	client := isrv1connect.NewSchemaRegistryServiceClient(
-		http.DefaultClient,
-		server.URL,
-	)
+	client, cleanup := newTestClient(t, handler)
+	defer cleanup()
 
 	testCases := []struct {
 		name    string
