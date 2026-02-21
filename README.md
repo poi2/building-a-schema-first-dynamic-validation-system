@@ -50,6 +50,12 @@ docker compose ps
 
 ## Documentation
 
+### For Developers
+
+* **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Setup, Git hooks, coding conventions, and contribution workflow
+
+### Design Documentation
+
 Detailed design documentation is available in the `docs/` directory:
 
 * [Requirements](docs/000.requirement.md) - Project goals and PoC scenarios
