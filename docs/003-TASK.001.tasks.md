@@ -27,7 +27,7 @@
 ```bash
 celo/
 ├── go.work              # Go Workspaces (isr, be, pkg/gen を管理)
-├── package.json         # Node Workspaces (bff, fe, e2e を管理)
+├── package.json         # Node Workspaces (fe, e2e を管理)
 ├── buf.gen.yaml         # pkg/gen/ への出力を定義
 ├── pkg/
 │   └── gen/             # 【重要】生成コード専用の共有モジュール
@@ -37,8 +37,9 @@ celo/
 ├── services/
 │   ├── isr/
 │   │   └── go.mod       # pkg/gen/go を参照
-│   └── be/
-│       └── go.mod       # pkg/gen/go を参照
+│   ├── be/
+│   │   └── go.mod       # pkg/gen/go を参照
+│   └── fe/
 ├── init-db/
 │   └── init.sh          # DB分離ロジック
 └── docker-compose.yml   # 動的ポート割り当て
@@ -86,22 +87,26 @@ celo/
 
 ---
 
-## Milestone 4: Frontend & BFF & E2E
+## Milestone 4: Frontend & E2E
 
-### Task: BFF (Node.js) の実装
+### Task: Backend (Go) にスキーマ配信エンドポイントを追加
 
-* **Background**: フロントエンド向けのプロキシと、スキーマ配信エンドポイントを提供。
+* **Background**: FE 向けのスキーマ配信エンドポイントを BE に実装（ISR へのプロキシ）。
 * **Acceptance Criteria**:
-* レスポンスヘッダーに `X-Schema-Version` を付与し、APIプロキシが機能すること。
+* `/api/v1/schema/latest` エンドポイントが実装され、CORS設定が完了していること。
+* レスポンスヘッダーに `X-Schema-Version` を付与すること。
 
 ### Task: Frontend (React) と動的バリデーション UI
 
 * **Background**: 即時フィードバックとバックグラウンドでのスキーマ更新を実装。
 * **Acceptance Criteria**:
+* protovalidate-ts を使用した即時バリデーションが機能すること。
 * スキーマ更新後、リロードなしで入力エラーの閾値が変化すること。
+* BE に直接リクエストを送信できること。
 
 ### Task: シナリオテスト (Playwright) の導入
 
 * **Background**: YAML シナリオに基づく全系の自動検証を Testcontainers 上で行う。
 * **Acceptance Criteria**:
 * 全シナリオ（正常・異常・偽装リクエスト）が CI 上で完走すること。
+* FE/BE 構成でのE2Eテストが正常に動作すること。
