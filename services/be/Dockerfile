@@ -15,7 +15,7 @@ COPY services/be services/be
 WORKDIR /app/services/be
 ENV GOTOOLCHAIN=auto
 ENV GOWORK=off
-RUN go mod download
+RUN go mod download && go mod tidy
 RUN go build -o /app/be .
 
 FROM alpine:3.21

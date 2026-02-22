@@ -15,7 +15,7 @@ COPY services/isr services/isr
 WORKDIR /app/services/isr
 ENV GOTOOLCHAIN=auto
 ENV GOWORK=off
-RUN go mod download
+RUN go mod download && go mod tidy
 RUN go build -o /app/isr .
 
 FROM alpine:3.21
