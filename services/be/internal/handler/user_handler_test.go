@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
@@ -93,10 +94,11 @@ func TestUserHandler_ListUsers(t *testing.T) {
 
 	// Create some users
 	for i := 0; i < 5; i++ {
-		repo.users["user-"+string(rune('0'+i))] = &model.User{
-			ID:        "user-" + string(rune('0'+i)),
+		userID := "user-" + strconv.Itoa(i)
+		repo.users[userID] = &model.User{
+			ID:        userID,
 			Name:      "User " + string(rune('A'+i)),
-			Email:     "user" + string(rune('0'+i)) + "@example.com",
+			Email:     "user" + strconv.Itoa(i) + "@example.com",
 			Plan:      "free",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),

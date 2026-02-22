@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -109,9 +110,9 @@ func TestUserRepository_List(t *testing.T) {
 	now := time.Now()
 	for i := 0; i < 5; i++ {
 		user := &model.User{
-			ID:        "test-user-" + string(rune('0'+i)),
+			ID:        "test-user-" + strconv.Itoa(i),
 			Name:      "User " + string(rune('A'+i)),
-			Email:     "user" + string(rune('0'+i)) + "@example.com",
+			Email:     "user" + strconv.Itoa(i) + "@example.com",
 			Plan:      "free",
 			CreatedAt: now.Add(time.Duration(i) * time.Minute),
 			UpdatedAt: now.Add(time.Duration(i) * time.Minute),
