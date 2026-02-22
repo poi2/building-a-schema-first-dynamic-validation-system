@@ -14,6 +14,7 @@ COPY services/be services/be
 # Build the service
 WORKDIR /app/services/be
 ENV GOTOOLCHAIN=auto
+ENV GOWORK=off
 RUN go mod download
 RUN go build -o /app/be .
 
