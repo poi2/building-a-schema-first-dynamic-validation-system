@@ -1,8 +1,4 @@
-# Placeholder for Backend service Dockerfile
-# To be implemented in Milestone 3
-# NOTE: This Dockerfile is non-functional until ./cmd/server is implemented.
-
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
@@ -17,10 +13,12 @@ COPY services/be services/be
 
 # Build the service
 WORKDIR /app/services/be
-RUN go mod download
-RUN go build -o /app/be ./cmd/server
+ENV GOTOOLCHAIN=auto
+ENV GOWORK=off
+RUN go mod download && go mod tidy
+RUN go build -o /app/be .
 
-FROM alpine:latest
+FROM alpine:3.21
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /app/be .
