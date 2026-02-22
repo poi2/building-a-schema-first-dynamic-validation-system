@@ -1,9 +1,10 @@
 module github.com/poi2/building-a-schema-first-dynamic-validation-system/services/isr
 
-go 1.24
+go 1.24.0
 
 require (
 	connectrpc.com/connect v1.19.0
+	connectrpc.com/validate v0.6.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go v0.0.0
@@ -15,7 +16,6 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.9-20250912141014-52f32327d4b0.1 // indirect
 	buf.build/go/protovalidate v1.0.0 // indirect
 	cel.dev/expr v0.24.0 // indirect
-	connectrpc.com/validate v0.6.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/google/cel-go v0.26.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

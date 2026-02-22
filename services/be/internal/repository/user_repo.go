@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/be/internal/model"
 )
@@ -109,6 +111,9 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*model.User, e
 		&user.UpdatedAt,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, pgx.ErrNoRows
+		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 

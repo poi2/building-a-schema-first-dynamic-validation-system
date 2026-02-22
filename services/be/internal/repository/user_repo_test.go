@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -14,7 +15,10 @@ func setupTestDB(t *testing.T) *pgxpool.Pool {
 
 	ctx := context.Background()
 	// Use test database URL from environment or default
-	dbURL := "postgres://postgres:postgres@localhost:5433/be?sslmode=disable"
+	dbURL := os.Getenv("CELO_DB_URL")
+	if dbURL == "" {
+		dbURL = "postgres://postgres:postgres@localhost:5433/be?sslmode=disable"
+	}
 
 	pool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {

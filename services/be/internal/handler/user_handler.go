@@ -35,7 +35,11 @@ func (h *UserHandler) CreateUser(
 	req *connect.Request[userv1.CreateUserRequest],
 ) (*connect.Response[userv1.CreateUserResponse], error) {
 	// Generate UUID v7
-	userID := uuid.NewString()
+	id, err := uuid.NewV7()
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	userID := id.String()
 
 	// Get current time
 	now := time.Now()
@@ -63,7 +67,7 @@ func (h *UserHandler) CreateUser(
 		Id:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
-		Plan:      req.Msg.Plan,
+		Plan:      stringToUserPlan(user.Plan),
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
 	}
@@ -78,15 +82,9 @@ func (h *UserHandler) ListUsers(
 	ctx context.Context,
 	req *connect.Request[userv1.ListUsersRequest],
 ) (*connect.Response[userv1.ListUsersResponse], error) {
-	// Get pagination parameters (default values if not provided)
+	// Get pagination parameters (validated by interceptor/proto)
 	page := req.Msg.Page
-	if page == 0 {
-		page = 1
-	}
 	pageSize := req.Msg.PageSize
-	if pageSize == 0 {
-		pageSize = 10
-	}
 
 	// Fetch users from repository
 	users, total, err := h.repo.List(ctx, int(page), int(pageSize))

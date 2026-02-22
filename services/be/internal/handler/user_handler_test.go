@@ -121,32 +121,6 @@ func TestUserHandler_ListUsers(t *testing.T) {
 	}
 }
 
-func TestUserHandler_ListUsers_DefaultPagination(t *testing.T) {
-	repo := newMockUserRepository()
-	handler := NewUserHandler(repo)
-	ctx := context.Background()
-
-	// Create a user
-	repo.users["user-1"] = &model.User{
-		ID:        "user-1",
-		Name:      "User A",
-		Email:     "usera@example.com",
-		Plan:      "free",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	req := connect.NewRequest(&userv1.ListUsersRequest{})
-
-	resp, err := handler.ListUsers(ctx, req)
-	if err != nil {
-		t.Fatalf("ListUsers failed: %v", err)
-	}
-
-	if resp.Msg.Total != 1 {
-		t.Errorf("Expected total 1, got %d", resp.Msg.Total)
-	}
-}
 
 func TestUserPlanConversion(t *testing.T) {
 	tests := []struct {
