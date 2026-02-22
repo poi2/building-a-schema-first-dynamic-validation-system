@@ -43,6 +43,7 @@ services:
   #   environment:
   #     CELO_DB_URL: postgres://postgres:postgres@db:5432/be?sslmode=disable
   #     CELO_ISR_URL: isr:50051
+  #     CELO_SCHEMA_TARGET: "1.0"
   #     CELO_PORT: 50052
   #   ports:
   #     - "50052:50052"
@@ -52,22 +53,6 @@ services:
   #     isr:
   #       condition: service_started
 
-  # Milestone 4+: BFF service (commented out until implementation)
-  # bff:
-  #   build:
-  #     context: .
-  #     dockerfile: services/bff/Dockerfile
-  #   container_name: celo-bff
-  #   environment:
-  #     CELO_BE_URL: http://be:50052
-  #     CELO_ISR_URL: isr:50051
-  #     CELO_PORT: 3001
-  #   ports:
-  #     - "3001:3001"
-  #   depends_on:
-  #     - be
-  #     - isr
-
   # Milestone 4+: Frontend service (commented out until implementation)
   # fe:
   #   build:
@@ -75,12 +60,12 @@ services:
   #     dockerfile: services/fe/Dockerfile
   #   container_name: celo-fe
   #   environment:
-  #     CELO_BFF_URL: http://bff:3001
+  #     CELO_BE_URL: http://be:50052
   #     CELO_PORT: 3000
   #   ports:
   #     - "3000:3000"
   #   depends_on:
-  #     - bff
+  #     - be
 
 volumes:
   postgres_data:
