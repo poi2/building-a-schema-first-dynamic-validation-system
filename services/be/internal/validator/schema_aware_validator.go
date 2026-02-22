@@ -2,13 +2,16 @@ package validator
 
 import (
 	"fmt"
+	"log"
 	"sync/atomic"
 
 	"buf.build/go/protovalidate"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 // validatorWithVersion wraps a validator with its schema version
@@ -51,7 +54,23 @@ func (s *SchemaAwareValidator) UpdateSchema(descriptorBytes []byte, version stri
 		return fmt.Errorf("failed to create files registry: %w", err)
 	}
 
-	// 3. Collect all message descriptors
+	// 3. Create extension type registry and register all extensions
+	// This is CRITICAL for dynamic validation rules to work!
+	// Without this, protovalidate cannot resolve buf.validate extensions
+	extensionRegistry := &protoregistry.Types{}
+	files.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
+		extensions := fd.Extensions()
+		for i := 0; i < extensions.Len(); i++ {
+			ext := extensions.Get(i)
+			if err = extensionRegistry.RegisterExtension(dynamicpb.NewExtensionType(ext)); err != nil {
+				log.Printf("[WARN UpdateSchema] Failed to register extension %s: %v", ext.FullName(), err)
+				// Continue anyway - might be already registered
+			}
+		}
+		return true
+	})
+
+	// 4. Collect all message descriptors
 	var descriptors []protoreflect.MessageDescriptor
 	files.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
 		messages := fd.Messages()
@@ -65,15 +84,16 @@ func (s *SchemaAwareValidator) UpdateSchema(descriptorBytes []byte, version stri
 		return fmt.Errorf("no message descriptors found in schema")
 	}
 
-	// 4. Create protovalidate.Validator
+	// 5. Create protovalidate.Validator with extension resolver
 	validator, err := protovalidate.New(
 		protovalidate.WithMessageDescriptors(descriptors...),
+		protovalidate.WithExtensionTypeResolver(extensionRegistry),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create validator: %w", err)
 	}
 
-	// 5. Store in atomic.Value
+	// 6. Store in atomic.Value
 	s.v.Store(&validatorWithVersion{
 		validator: validator,
 		version:   version,
