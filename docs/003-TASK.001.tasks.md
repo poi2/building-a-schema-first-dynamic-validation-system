@@ -72,11 +72,12 @@ celo/
 * **Acceptance Criteria**:
 * ユーザーの新規作成と一覧取得ができること。
 
-### Task: 動的スキーマ同期 (Hot Reload) 実装
+### Task: 動的スキーマ同期 (Hot Reload) 実装 ❌ 制約により不可
 
 * **Background**: 1分周期のポーリングと、バリデーターの Atomic Swap を実装する。
 * **Acceptance Criteria**:
-* アプリを止めずに、ログ上でスキーマバージョンの更新が確認できること。
+* ~~アプリを止めずに、ログ上でスキーマバージョンの更新が確認できること。~~
+* **実装結果**: ISRポーリング機構とスキーマ取得は実装完了。ログ出力も正常に動作。しかし、protovalidateが静的メッセージの`msg.ProtoReflect().Descriptor()`を参照するため、**バリデーションルールの動的更新は不可能**と判明。詳細は[Design Doc 3 § 7.1](001-DD.003.validation-strategy.md#71-実装結果と重要な制約事項)参照。
 
 ### Task: Post API と Context Enrichment 実装
 

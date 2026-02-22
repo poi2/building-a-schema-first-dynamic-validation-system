@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -16,6 +18,8 @@ import (
 	userv1connect "github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/user/v1/userv1connect"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/be/internal/handler"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/be/internal/repository"
+	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/be/internal/schemamanager"
+	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/be/internal/validator"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -40,6 +44,26 @@ func run() error {
 		port = "50052"
 	}
 
+	// Schema configuration
+	isrURL := os.Getenv("CELO_ISR_URL")
+	if isrURL == "" {
+		isrURL = "http://localhost:50051"
+	}
+	if !strings.HasPrefix(isrURL, "http://") && !strings.HasPrefix(isrURL, "https://") {
+		isrURL = "http://" + isrURL
+	}
+
+	schemaTarget := os.Getenv("CELO_SCHEMA_TARGET")
+	if schemaTarget == "" {
+		schemaTarget = "1.0"
+	}
+
+	// Parse schema target version
+	major, minor, err := parseSchemaTarget(schemaTarget)
+	if err != nil {
+		return fmt.Errorf("invalid CELO_SCHEMA_TARGET: %w", err)
+	}
+
 	// Connect to database
 	pool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
@@ -58,6 +82,30 @@ func run() error {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
+	// Create schema manager config
+	schemaConfig := schemamanager.Config{
+		ISRURL:          isrURL,
+		SchemaTarget:    schemaTarget,
+		Major:           major,
+		Minor:           minor,
+		PollingInterval: 1 * time.Minute,
+	}
+
+	// Create schema-aware validator
+	schemaValidator := &validator.SchemaAwareValidator{}
+
+	// Create schema manager
+	manager := schemamanager.NewSchemaManager(schemaConfig, schemaValidator)
+
+	// Load initial schema
+	if err := manager.LoadInitialSchema(ctx); err != nil {
+		return fmt.Errorf("failed to load initial schema: %w", err)
+	}
+
+	// Start schema manager
+	manager.Start(ctx)
+	defer manager.Stop()
+
 	// Initialize repository and handler
 	userRepo := repository.NewUserRepository(pool)
 	userHandler := handler.NewUserHandler(userRepo)
@@ -65,7 +113,9 @@ func run() error {
 	// Create HTTP server with Connect
 	mux := http.NewServeMux()
 	interceptors := connect.WithInterceptors(
-		validate.NewInterceptor(),
+		validate.NewInterceptor(
+			validate.WithValidator(schemaValidator),
+		),
 	)
 	path, connectHandler := userv1connect.NewUserServiceHandler(userHandler, interceptors)
 	mux.Handle(path, connectHandler)
@@ -90,6 +140,10 @@ func run() error {
 		<-sigCh
 
 		log.Println("Shutting down server...")
+
+		// Stop schema manager first
+		manager.Stop()
+
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
@@ -105,6 +159,26 @@ func run() error {
 
 	log.Println("Server stopped gracefully")
 	return nil
+}
+
+// parseSchemaTarget parses a schema target string like "1.0" into major and minor versions
+func parseSchemaTarget(target string) (int32, int32, error) {
+	parts := strings.Split(target, ".")
+	if len(parts) != 2 {
+		return 0, 0, fmt.Errorf("expected format 'Major.Minor', got %q", target)
+	}
+
+	major, err := strconv.ParseInt(parts[0], 10, 32)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid major version %q: %w", parts[0], err)
+	}
+
+	minor, err := strconv.ParseInt(parts[1], 10, 32)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid minor version %q: %w", parts[1], err)
+	}
+
+	return int32(major), int32(minor), nil
 }
 
 func runMigrations(ctx context.Context, pool *pgxpool.Pool) error {
