@@ -13,7 +13,6 @@ This project demonstrates a dynamic validation system where:
 ## Architecture
 
 * **Frontend**: TypeScript, React, `@connectrpc/connect-web`
-* **BFF**: Node.js, TypeScript, `@connectrpc/connect-node`
 * **Backend**: Go, `connect-go`, `protovalidate-go`
 * **ISR (Internal Schema Registry)**: Go service for schema distribution
 * **Database**: PostgreSQL (with separate databases for ISR and backend)
@@ -69,7 +68,7 @@ Detailed design documentation is available in the `docs/` directory:
 ## Key Features
 
 1. **Hot Reload**: Schema updates propagate to all services within minutes without restarts
-2. **Multi-Layer Validation**: Optimistic validation in FE, authoritative validation in BE
+2. **Dual-Layer Validation**: Optimistic validation in FE, authoritative validation in BE
 3. **Context Enrichment**: Business rules (user plans) injected into proto messages for CEL-based validation
 4. **Fail-Safe**: Services fallback to bundled schemas if ISR is unavailable
 
@@ -163,7 +162,6 @@ celo/
 ├── services/
 │   ├── isr/             # Internal Schema Registry
 │   ├── be/              # Backend service
-│   ├── bff/             # Backend for Frontend
 │   └── fe/              # Frontend
 ├── docker/init-db/      # Database initialization scripts
 └── tests/
