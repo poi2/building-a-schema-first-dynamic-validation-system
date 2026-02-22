@@ -34,24 +34,24 @@ services:
       db:
         condition: service_healthy
 
-  # Milestone 3+: Backend service (commented out until implementation)
-  # be:
-  #   build:
-  #     context: .
-  #     dockerfile: services/be/Dockerfile
-  #   container_name: celo-be
-  #   environment:
-  #     CELO_DB_URL: postgres://postgres:postgres@db:5432/be?sslmode=disable
-  #     CELO_ISR_URL: isr:50051
-  #     CELO_SCHEMA_TARGET: "1.0"
-  #     CELO_PORT: 50052
-  #   ports:
-  #     - "50052:50052"
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #     isr:
-  #       condition: service_started
+  # Backend service
+  be:
+    build:
+      context: .
+      dockerfile: services/be/Dockerfile
+    container_name: celo-be
+    environment:
+      CELO_DB_URL: postgres://postgres:postgres@db:5432/be?sslmode=disable
+      CELO_ISR_URL: isr:50051
+      CELO_SCHEMA_TARGET: "1.0"
+      CELO_PORT: 50052
+    ports:
+      - "50052:50052"
+    depends_on:
+      db:
+        condition: service_healthy
+      isr:
+        condition: service_started
 
   # Milestone 4+: Frontend service (commented out until implementation)
   # fe:

@@ -1,6 +1,7 @@
-go 1.24
+go 1.24.0
 
 use (
 	./pkg/gen/go
+	./services/be
 	./services/isr
 )
