@@ -4,7 +4,6 @@
   "private": true,
   "description": "Schema-First Dynamic Validation System PoC",
   "workspaces": [
-    "services/bff",
     "services/fe",
     "tests/e2e"
   ],
