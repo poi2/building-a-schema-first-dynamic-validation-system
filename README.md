@@ -4,11 +4,11 @@ A proof-of-concept for a schema-first dynamic validation system using ConnectRPC
 
 ## Overview
 
-This project demonstrates a dynamic validation system where:
+This project demonstrates a schema-first validation system where:
 
 * `.proto` files serve as the single source of truth for validation rules
-* Validation schemas can be updated at runtime without service restarts
 * Business logic (e.g., user plan-based restrictions) is enforced consistently across all layers using CEL expressions
+* **Note**: Runtime schema updates without restarts (hot reload) were explored but found to be incompatible with protovalidate's static message validation architecture. See [Validation Strategy § 7.1](docs/001-DD.003.validation-strategy.md#71-実装結果と重要な制約事項) for details.
 
 ## Architecture
 
@@ -67,10 +67,12 @@ Detailed design documentation is available in the `docs/` directory:
 
 ## Key Features
 
-1. **Hot Reload**: Schema updates propagate to all services within minutes without restarts
+1. **Schema-First Architecture**: Single source of truth for validation rules and API contracts
 2. **Dual-Layer Validation**: Optimistic validation in FE, authoritative validation in BE
 3. **Context Enrichment**: Business rules (user plans) injected into proto messages for CEL-based validation
-4. **Fail-Safe**: Services fallback to bundled schemas if ISR is unavailable
+4. **Schema Registry (ISR)**: Centralized schema versioning and distribution
+
+**Note on Hot Reload**: While the ISR infrastructure supports schema versioning and polling, runtime validation rule updates without restarts are not possible with protovalidate's static message architecture. Schema updates require rebuilding and redeploying services. See [Design Doc § 7.1](docs/001-DD.003.validation-strategy.md#71-実装結果と重要な制約事項) for technical details and recommended deployment strategies.
 
 ## Development
 
