@@ -149,7 +149,7 @@ func TestSchemaManager_CheckAndUpdateSchema_NoUpdate(t *testing.T) {
 
 func TestSchemaManager_CheckAndUpdateSchema_HotSwap(t *testing.T) {
 	// Start with version 1.0.0
-	server, descriptorData := setupMockISRServer(t, "1.0.0", false)
+	server, _ := setupMockISRServer(t, "1.0.0", false)
 
 	config := Config{
 		ISRURL:          server.URL,
@@ -174,21 +174,15 @@ func TestSchemaManager_CheckAndUpdateSchema_HotSwap(t *testing.T) {
 		t.Errorf("expected initial version 1.0.0, got %s", initialVersion)
 	}
 
-	// Update mock server to return new version
-	server.Config.Handler.(*http.ServeMux).HandleFunc(isrv1connect.SchemaRegistryServiceGetLatestPatchProcedure, func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/proto")
-		resp := &isrv1.GetLatestPatchResponse{
-			Metadata: &isrv1.SchemaMetadata{
-				Version: "1.0.1",
-			},
-			SchemaBinary: descriptorData,
-		}
-		data, _ := proto.Marshal(resp)
-		w.Write(data)
-	})
+	// Create a new mock server that returns the updated version 1.0.1
+	newServer, _ := setupMockISRServer(t, "1.0.1", false)
 
-	// Recreate client and manager to pick up new handler
-	manager = NewSchemaManager(config, schemaValidator)
+	// Update config to point to the new server
+	updatedConfig := config
+	updatedConfig.ISRURL = newServer.URL
+
+	// Recreate manager with updated config so it sees the new version
+	manager = NewSchemaManager(updatedConfig, schemaValidator)
 
 	// Check for updates (should find new version)
 	if err := manager.checkAndUpdateSchema(ctx); err != nil {

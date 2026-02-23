@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
@@ -184,7 +185,7 @@ func TestSchemaAwareValidator_ConcurrentAccess(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			for j := 0; j < iterations; j++ {
-				version := "1.0." + string(rune('0'+j%10))
+				version := fmt.Sprintf("1.0.%d", j%10)
 				_ = validator.UpdateSchema(descriptorBytes, version)
 			}
 		}(i)

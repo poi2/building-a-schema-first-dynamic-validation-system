@@ -36,7 +36,11 @@ func NewSchemaAwareValidator(descriptorBytes []byte, version string) (*SchemaAwa
 
 // Validate validates a protobuf message using the current schema
 func (s *SchemaAwareValidator) Validate(msg proto.Message, options ...protovalidate.ValidationOption) error {
-	vwv := s.v.Load().(*validatorWithVersion)
+	v := s.v.Load()
+	if v == nil {
+		return fmt.Errorf("validator not initialized: call UpdateSchema first")
+	}
+	vwv := v.(*validatorWithVersion)
 	return vwv.validator.Validate(msg, options...)
 }
 
@@ -104,10 +108,11 @@ func (s *SchemaAwareValidator) UpdateSchema(descriptorBytes []byte, version stri
 
 // GetCurrentVersion returns the current schema version
 func (s *SchemaAwareValidator) GetCurrentVersion() string {
-	vwv := s.v.Load().(*validatorWithVersion)
-	if vwv == nil {
+	v := s.v.Load()
+	if v == nil {
 		return ""
 	}
+	vwv := v.(*validatorWithVersion)
 	return vwv.version
 }
 

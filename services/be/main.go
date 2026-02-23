@@ -104,7 +104,6 @@ func run() error {
 
 	// Start schema manager
 	manager.Start(ctx)
-	defer manager.Stop()
 
 	// Initialize repository and handler
 	userRepo := repository.NewUserRepository(pool)

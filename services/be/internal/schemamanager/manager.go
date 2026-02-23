@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"connectrpc.com/connect"
@@ -20,6 +21,7 @@ type SchemaManager struct {
 	client    isrv1connect.SchemaRegistryServiceClient
 	stopCh    chan struct{}
 	doneCh    chan struct{}
+	stopOnce  sync.Once
 }
 
 // NewSchemaManager creates a new schema manager
@@ -50,6 +52,10 @@ func (m *SchemaManager) LoadInitialSchema(ctx context.Context) error {
 		return fmt.Errorf("failed to get initial schema from ISR: %w", err)
 	}
 
+	if resp.Msg == nil || resp.Msg.Metadata == nil {
+		return fmt.Errorf("invalid response from ISR: missing metadata")
+	}
+
 	version := resp.Msg.Metadata.Version
 	if err := m.validator.UpdateSchema(resp.Msg.SchemaBinary, version); err != nil {
 		return fmt.Errorf("failed to initialize validator with schema: %w", err)
@@ -65,10 +71,13 @@ func (m *SchemaManager) Start(ctx context.Context) {
 }
 
 // Stop gracefully stops the schema manager
+// This method is idempotent and can be safely called multiple times
 func (m *SchemaManager) Stop() {
-	close(m.stopCh)
-	<-m.doneCh
-	log.Println("Schema manager stopped")
+	m.stopOnce.Do(func() {
+		close(m.stopCh)
+		<-m.doneCh
+		log.Println("Schema manager stopped")
+	})
 }
 
 // pollLoop runs the schema polling loop
@@ -105,6 +114,10 @@ func (m *SchemaManager) checkAndUpdateSchema(ctx context.Context) error {
 	resp, err := m.client.GetLatestPatch(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to get latest patch from ISR: %w", err)
+	}
+
+	if resp.Msg == nil || resp.Msg.Metadata == nil {
+		return fmt.Errorf("invalid response from ISR: missing metadata")
 	}
 
 	latestVersion := resp.Msg.Metadata.Version
