@@ -92,9 +92,10 @@ building-a-schema-first-dynamic-validation-system/
   * 既存の Repository インターフェースを維持すること。
 
 **実装内容**:
-  * `YAMLUserRepository` の実装
-  * user.yaml のフォーマット定義
-  * 起動時の YAML ロード処理
+
+* `YAMLUserRepository` の実装
+* user.yaml のフォーマット定義
+* 起動時の YAML ロード処理
 
 ### Task 3-4: Post API と Context Enrichment 実装
 
@@ -107,10 +108,11 @@ building-a-schema-first-dynamic-validation-system/
   * curl/grpcurl でテストできること。
 
 **実装内容**:
-  * `PostHandler` の実装
-  * `YAMLPostRepository` の実装
-  * Context Enrichment ロジック
-  * post.yaml のフォーマット定義
+
+* `PostHandler` の実装
+* `YAMLPostRepository` の実装
+* Context Enrichment ロジック
+* post.yaml のフォーマット定義
 
 ---
 
@@ -127,16 +129,18 @@ building-a-schema-first-dynamic-validation-system/
   * BE への実際の通信は行わないこと。
 
 **実装内容**:
-  * React/Vue/Svelte のいずれかで実装
-  * protovalidate-ts の組み込み
-  * YAML 読み書き処理
-  * 基本的な UI コンポーネント
+
+* React/Vue/Svelte のいずれかで実装
+* protovalidate-ts の組み込み
+* YAML 読み書き処理
+* 基本的な UI コンポーネント
 
 **スコープ外**:
-  * ~~BE との実際の通信~~
-  * ~~スキーマの定期取得~~
-  * ~~Server Streaming~~
-  * ~~E2Eテスト~~
+
+* ~~BE との実際の通信~~
+* ~~スキーマの定期取得~~
+* ~~Server Streaming~~
+* ~~E2Eテスト~~
 
 ---
 
