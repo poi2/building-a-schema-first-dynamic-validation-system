@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "Running markdown lint..."
+npm run lint:md
+
+if [ $? -ne 0 ]; then
+    echo -e "\033[31mError: Markdown lint failed. Please fix the errors above.\033[0m"
+    echo -e "\033[33mTip: Run 'npm run lint:md:fix' to auto-fix some issues.\033[0m"
+    exit 1
+fi
+
+echo -e "\033[32mMarkdown lint passed!\033[0m"
+exit 0

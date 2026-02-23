@@ -3,9 +3,7 @@ set -euo pipefail
 
 # Determine paths based on script location
 SCRIPT_DIR=$(dirname "$0")
-HOOK_SOURCE="$SCRIPT_DIR/commit-msg"
 HOOKS_DIR=$(git rev-parse --git-path hooks)
-HOOK_DEST="$HOOKS_DIR/commit-msg"
 
 echo "Configuring git hooks from .github/git-hooks/..."
 
@@ -15,22 +13,34 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
     exit 1
 fi
 
-# Check if source hook file exists
-if [ ! -f "$HOOK_SOURCE" ]; then
-    echo "Error: Hook source file not found at $HOOK_SOURCE"
-    exit 1
-fi
+# Function to install a hook
+install_hook() {
+    local hook_name=$1
+    local hook_source="$SCRIPT_DIR/$hook_name"
+    local hook_dest="$HOOKS_DIR/$hook_name"
 
-# Copy hook file and make it executable
-if ! cp "$HOOK_SOURCE" "$HOOK_DEST"; then
-    echo "Error: Failed to copy hook to $HOOK_DEST"
-    exit 1
-fi
+    # Check if source hook file exists
+    if [ ! -f "$hook_source" ]; then
+        echo "Warning: Hook source file not found at $hook_source, skipping..."
+        return 0
+    fi
 
-if ! chmod +x "$HOOK_DEST"; then
-    echo "Error: Failed to make hook executable"
-    exit 1
-fi
+    # Copy hook file and make it executable
+    if ! cp "$hook_source" "$hook_dest"; then
+        echo "Error: Failed to copy $hook_name to $hook_dest"
+        return 1
+    fi
 
-echo "Successfully installed commit-msg hook to $HOOK_DEST"
+    if ! chmod +x "$hook_dest"; then
+        echo "Error: Failed to make $hook_name executable"
+        return 1
+    fi
+
+    echo "Successfully installed $hook_name hook to $hook_dest"
+    return 0
+}
+
+# Install hooks
+install_hook "commit-msg"
+install_hook "pre-push"
 
