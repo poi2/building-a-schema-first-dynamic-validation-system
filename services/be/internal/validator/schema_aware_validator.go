@@ -66,8 +66,8 @@ func (s *SchemaAwareValidator) UpdateSchema(descriptorBytes []byte, version stri
 		extensions := fd.Extensions()
 		for i := 0; i < extensions.Len(); i++ {
 			ext := extensions.Get(i)
-			if err = extensionRegistry.RegisterExtension(dynamicpb.NewExtensionType(ext)); err != nil {
-				log.Printf("[WARN UpdateSchema] Failed to register extension %s: %v", ext.FullName(), err)
+			if regErr := extensionRegistry.RegisterExtension(dynamicpb.NewExtensionType(ext)); regErr != nil {
+				log.Printf("[WARN UpdateSchema] Failed to register extension %s: %v", ext.FullName(), regErr)
 				// Continue anyway - might be already registered
 			}
 		}

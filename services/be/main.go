@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -49,8 +50,17 @@ func run() error {
 	if isrURL == "" {
 		isrURL = "http://localhost:50051"
 	}
+	// Add http:// prefix if no scheme is specified
 	if !strings.HasPrefix(isrURL, "http://") && !strings.HasPrefix(isrURL, "https://") {
 		isrURL = "http://" + isrURL
+	}
+	// Validate URL structure
+	parsedURL, err := url.Parse(isrURL)
+	if err != nil {
+		return fmt.Errorf("invalid CELO_ISR_URL %q: %w", isrURL, err)
+	}
+	if parsedURL.Scheme == "" || parsedURL.Host == "" {
+		return fmt.Errorf("invalid CELO_ISR_URL %q: must include scheme and host", isrURL)
 	}
 
 	schemaTarget := os.Getenv("CELO_SCHEMA_TARGET")

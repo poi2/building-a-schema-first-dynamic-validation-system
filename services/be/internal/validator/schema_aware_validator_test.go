@@ -113,6 +113,27 @@ func TestSchemaAwareValidator_Validate(t *testing.T) {
 	}
 }
 
+func TestSchemaAwareValidator_ValidateBeforeInit(t *testing.T) {
+	// Create a zero-valued validator without calling UpdateSchema
+	var validator SchemaAwareValidator
+
+	msg := &userv1.CreateUserRequest{
+		Name:  "Test",
+		Email: "test@example.com",
+		Plan:  commonv1.UserPlan_USER_PLAN_FREE,
+	}
+
+	err := validator.Validate(msg)
+	if err == nil {
+		t.Fatal("expected error when validating with uninitialized validator, got nil")
+	}
+
+	const expectedErr = "validator not initialized: call UpdateSchema first"
+	if err.Error() != expectedErr {
+		t.Errorf("unexpected error message: got %q, want %q", err.Error(), expectedErr)
+	}
+}
+
 func TestSchemaAwareValidator_UpdateSchema(t *testing.T) {
 	descriptorBytes := CreateTestDescriptorBytes(t)
 
