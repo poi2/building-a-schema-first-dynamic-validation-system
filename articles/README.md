@@ -14,6 +14,7 @@
 `YYYY-MM-タイトル.md` の形式を推奨
 
 例:
+
 - `2026-02-schema-hot-reload-implementation.md`
 - `2026-03-protovalidate-validation-strategy.md`
 

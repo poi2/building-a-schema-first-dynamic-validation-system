@@ -4,7 +4,7 @@
 
 ## ⚠️ 重要な制約事項
 
-**Hot Reload は現状機能しません**
+### Hot Reload は現状機能しません
 
 実装・検証の結果、protovalidateの技術的制約により、静的メッセージのバリデーションルールを実行時に更新することはできないことが判明しました。
 
@@ -78,7 +78,8 @@ docker-compose ps
 ```
 
 **期待される出力**:
-```
+
+```text
 📦 Building schema descriptor...
 ✅ Schema uploaded successfully: version=1.0.0, id=...
 ```
@@ -90,7 +91,8 @@ docker-compose logs be
 ```
 
 **確認ポイント**:
-```
+
+```text
 Schema initialized: target=1.0, loaded version=1.0.0
 BE service listening on :50052
 ```
@@ -108,6 +110,7 @@ curl -X POST http://localhost:50052/user.v1.UserService/CreateUser \
 ```
 
 **期待される出力**:
+
 ```json
 {
   "user": {
@@ -133,6 +136,7 @@ curl -X POST http://localhost:50052/user.v1.UserService/CreateUser \
 ```
 
 **期待される出力**:
+
 ```json
 {
   "code": "invalid_argument",

@@ -37,7 +37,7 @@
 
 ### 全体構成
 
-```
+```text
 ┌─────────┐     ┌─────────┐     ┌─────────┐
 │   FE    │────▶│   BE    │────▶│   DB    │
 └─────────┘     └────┬────┘     └─────────┘
@@ -192,7 +192,7 @@ func (m *SchemaManager) checkAndUpdateSchema(ctx context.Context) error {
 }
 ```
 
-## 問題の発見 - 動いているように見えたが...
+## 問題の発見 - 動いているように見えたが
 
 ### 初期検証: 成功したと思った
 
@@ -315,7 +315,7 @@ func (v *validator) Validate(
 
 ### なぜ動かないか
 
-```
+```text
 ┌──────────────────────────────────────┐
 │ BE Service (Go Binary)               │
 │                                      │
@@ -368,10 +368,12 @@ curl -X POST http://localhost:50052/user.v1.UserService/CreateUser \
 静的メッセージではなく、`dynamicpb.Message` を使用すれば Hot Reload は可能です。
 
 **メリット**:
+
 - 実行時にディスクリプタを差し替え可能
 - 真の Hot Reload が実現できる
 
 **デメリット**:
+
 - 型安全性の喪失（コンパイル時のチェックがない）
 - Connect RPC ハンドラーを含む全面的な書き換えが必要
 - パフォーマンスオーバーヘッド
@@ -382,10 +384,12 @@ curl -X POST http://localhost:50052/user.v1.UserService/CreateUser \
 protovalidate を使わず、動的ディスクリプタから直接バリデーションルールを読み取る独自実装。
 
 **メリット**:
+
 - 完全なコントロール
 - Hot Reload 可能
 
 **デメリット**:
+
 - CEL エンジンの統合が必要
 - protovalidate の豊富な機能を再実装
 - メンテナンスコストが高い
@@ -395,16 +399,19 @@ protovalidate を使わず、動的ディスクリプタから直接バリデー
 Hot Reload を諦め、標準的なデプロイ戦略で対応：
 
 **Blue-Green Deployment**:
+
 - 新スキーマでビルドした新バージョンを別環境に展開
 - トラフィックを切り替え
 - ダウンタイムほぼゼロ
 
 **Rolling Update**:
+
 - Kubernetes で順次ポッドを更新
 - 段階的なロールアウト
 - 問題発生時は即座にロールバック
 
 **Canary Release**:
+
 - 一部のトラフィックだけ新バージョンに流す
 - リスクを最小化
 
@@ -446,9 +453,10 @@ func main() {
 
 ### 4. 技術選定の判断基準
 
-**ライブラリの内部動作を理解してから設計する**
+#### ライブラリの内部動作を理解してから設計する
 
 今回は以下を怠りました：
+
 - protovalidate が静的ディスクリプタに依存することの確認
 - Protocol Buffers のリフレクション API の理解
 - 動的メッセージと静的メッセージの違いの認識
