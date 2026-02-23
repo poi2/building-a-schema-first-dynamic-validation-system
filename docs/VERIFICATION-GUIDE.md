@@ -155,6 +155,7 @@ curl -X POST http://localhost:50052/user.v1.UserService/CreateUser \
 ```
 
 **期待される出力**:
+
 ```json
 {
   "code": "invalid_argument",
@@ -182,7 +183,8 @@ docker-compose logs -f be
 ```
 
 **期待される出力**:
-```
+
+```text
 📦 Building schema descriptor...
 📊 Schema size: 316495 bytes
 🚀 Uploading schema version 1.0.1 to ISR (http://localhost:50051)...
@@ -198,13 +200,15 @@ docker-compose logs -f be
 約1分以内（ポーリング間隔）に、BEログに以下が表示されることを確認：
 
 **期待されるログ**:
-```
+
+```text
 celo-be  | 2026/02/22 14:26:06 Hot-swapped validator: 1.0.0 -> 1.0.1
 ```
 
 **✅ 重要**:
-- アプリケーションを再起動せずに、実行中のまま新しいバリデーターに切り替わる
-- スキーマアップロード (14:25:50) から約16秒後 (14:26:06) に検知（次のポーリングタイミング）
+
+* アプリケーションを再起動せずに、実行中のまま新しいバリデーターに切り替わる
+* スキーマアップロード (14:25:50) から約16秒後 (14:26:06) に検知（次のポーリングタイミング）
 
 #### 5.4 ホットスワップ中もリクエストが処理できることを確認
 
@@ -216,6 +220,7 @@ curl -X POST http://localhost:50052/user.v1.UserService/CreateUser \
 ```
 
 **期待される出力**:
+
 ```json
 {
   "user": {
@@ -239,7 +244,8 @@ curl -X POST http://localhost:50052/user.v1.UserService/CreateUser \
 ```
 
 **期待される出力**:
-```
+
+```text
 📦 Building schema descriptor...
 📊 Schema size: 316495 bytes
 🚀 Uploading schema version 1.0.2 to ISR (http://localhost:50051)...
@@ -253,7 +259,8 @@ curl -X POST http://localhost:50052/user.v1.UserService/CreateUser \
 BEログで確認（約1分待機）：
 
 **期待されるログ**:
-```
+
+```text
 celo-be  | 2026/02/22 14:28:06 Hot-swapped validator: 1.0.1 -> 1.0.2
 ```
 
@@ -266,7 +273,8 @@ docker-compose logs be | tail -10
 ```
 
 **期待される出力**:
-```
+
+```text
 celo-be  | 2026/02/22 14:21:06 Schema initialized: target=1.0, loaded version=1.0.0
 celo-be  | 2026/02/22 14:21:06 BE service listening on :50052
 celo-be  | 2026/02/22 14:26:06 Hot-swapped validator: 1.0.0 -> 1.0.1
@@ -274,9 +282,10 @@ celo-be  | 2026/02/22 14:28:06 Hot-swapped validator: 1.0.1 -> 1.0.2
 ```
 
 ✅ **完璧なホットスワップタイムライン**:
-- 14:21:06 - 起動（v1.0.0）
-- 14:26:06 - 1回目のホットスワップ（v1.0.0 → v1.0.1）
-- 14:28:06 - 2回目のホットスワップ（v1.0.1 → v1.0.2）
+
+* 14:21:06 - 起動（v1.0.0）
+* 14:26:06 - 1回目のホットスワップ（v1.0.0 → v1.0.1）
+* 14:28:06 - 2回目のホットスワップ（v1.0.1 → v1.0.2）
 
 ### 6. バリデーションルール変更のテスト（応用編）
 
@@ -398,7 +407,8 @@ docker-compose stop be
 ```
 
 **期待されるログ**:
-```
+
+```text
 Shutting down server...
 Schema manager stopped
 Server stopped gracefully
@@ -417,25 +427,28 @@ docker-compose down -v
 ## 検証チェックリスト
 
 ### 基本検証（セクション1-5）
-- [ ] サービス起動: db, isr, be が正常に起動
-- [ ] 初期化: `Schema initialized: target=1.0, loaded version=1.0.0` が表示
-- [ ] バリデーション: 有効なリクエストが成功
-- [ ] バリデーション: 無効なリクエストがエラー
-- [ ] ホットスワップ: 約1分以内に `Hot-swapped validator: 1.0.0 -> 1.0.1` が表示
-- [ ] ホットスワップ: アプリケーション再起動なしで動作
-- [ ] リクエスト処理: ホットスワップ中もリクエストが正常に処理される
-- [ ] 連続スワップ: `1.0.1 -> 1.0.2` も正常に動作
+
+* [ ] サービス起動: db, isr, be が正常に起動
+* [ ] 初期化: `Schema initialized: target=1.0, loaded version=1.0.0` が表示
+* [ ] バリデーション: 有効なリクエストが成功
+* [ ] バリデーション: 無効なリクエストがエラー
+* [ ] ホットスワップ: 約1分以内に `Hot-swapped validator: 1.0.0 -> 1.0.1` が表示
+* [ ] ホットスワップ: アプリケーション再起動なしで動作
+* [ ] リクエスト処理: ホットスワップ中もリクエストが正常に処理される
+* [ ] 連続スワップ: `1.0.1 -> 1.0.2` も正常に動作
 
 ### 応用検証（セクション6）
-- [ ] ルール変更: protoファイルのバリデーションルールを変更
-- [ ] 境界値テスト: v1.0.0で成功するリクエストを確認
-- [ ] ホットスワップ: v1.0.1にホットスワップ完了
-- [ ] 挙動変更確認: 同じリクエストがv1.0.1で失敗することを確認
-- [ ] スキーマ復元: テスト後にprotoファイルを元に戻す
+
+* [ ] ルール変更: protoファイルのバリデーションルールを変更
+* [ ] 境界値テスト: v1.0.0で成功するリクエストを確認
+* [ ] ホットスワップ: v1.0.1にホットスワップ完了
+* [ ] 挙動変更確認: 同じリクエストがv1.0.1で失敗することを確認
+* [ ] スキーマ復元: テスト後にprotoファイルを元に戻す
 
 ### その他
-- [ ] グレースフルシャットダウン: `Schema manager stopped` が表示
-- [ ] クリーンアップ: 環境を正常に停止できる
+
+* [ ] グレースフルシャットダウン: `Schema manager stopped` が表示
+* [ ] クリーンアップ: 環境を正常に停止できる
 
 ## トラブルシューティング
 
@@ -491,6 +504,7 @@ BEサービスで使用される環境変数：
 - `CELO_PORT`: BEサービスのポート（デフォルト: `50052`）
 
 docker-compose.yml での設定例:
+
 ```yaml
 be:
   environment:
