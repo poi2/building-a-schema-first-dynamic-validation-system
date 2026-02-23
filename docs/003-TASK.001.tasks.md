@@ -5,10 +5,9 @@
 * **Background**: 複数言語・複数サービスを円滑に管理するため、Go Workspaces と Node.js Workspaces を導入します。また、`CELO_` プレフィックスを用いた環境変数規約を確立します。
 * **Acceptance Criteria**:
   * ルートに `go.work` が存在し、各サービスを認識していること。
-  * `docker compose up -d` で Postgres が起動し、`init.sh` により `isr`, `be` が作成されること。
-  * 各サービスが `CELO_DB_URL` などの統一的な環境変数で設定可能であること。
+  * 各サービスが `CELO_DB_URL` などの統一的な環境変数で設定可能であること（PostgreSQL は使用しないが、ISR は既存実装を維持）。
 
-* **批判的視点への対策**: 接続文字列の形式を全サービスで統一（`postgres://user:pass@host:port/db`）し、環境変数の不一致による起動失敗を防止。
+* **批判的視点への対策**: 環境変数の形式を全サービスで統一し、不一致による起動失敗を防止。
 
 ## Task 1-2: Proto定義と「型専用共有モジュール」の確立
 
@@ -25,7 +24,7 @@
 ## Milestone 1 時点の想定ディレクトリ構造
 
 ```bash
-celo/
+building-a-schema-first-dynamic-validation-system/
 ├── go.work              # Go Workspaces (isr, be, pkg/gen を管理)
 ├── package.json         # Node Workspaces (fe, e2e を管理)
 ├── buf.gen.yaml         # pkg/gen/ への出力を定義
@@ -40,74 +39,137 @@ celo/
 │   ├── be/
 │   │   └── go.mod       # pkg/gen/go を参照
 │   └── fe/
-├── init-db/
-│   └── init.sh          # DB分離ロジック
-└── docker-compose.yml   # 動的ポート割り当て
-
+└── README.md
 ```
+
+**注**: docker-compose.yml は削除されました（サービス間依存がないため）
 
 ---
 
 ## Milestone 2: ISR (レジストリ) & Schema Push
 
-### Task: ISR サービスの基本実装
+### Task 2-1: ISR サービスの基本実装
 
-* **Background**: スキーマバイナリを SemVer 管理・配信するハブを作成する。
+* **Background**: スキーマバイナリを SemVer 管理・配信するハブを作成する（参考実装として維持）。
 * **Acceptance Criteria**:
-* `UploadSchema` でバイナリ保存、`GetLatestPatch` で最新版を返却できること。
+  * `UploadSchema` でバイナリ保存、`GetLatestPatch` で最新版を返却できること。
+  * PostgreSQL を使用した実装（BE との連携は行わない）。
 
-### Task: Local Upload スクリプトの実装
+### Task 2-2: Local Upload スクリプトの実装
 
 * **Background**: 開発環境から ISR へ UUID v7 を伴う最新スキーマを送り込む。
 * **Acceptance Criteria**:
-* スクリプト一発で `.proto` ビルドから ISR 登録までが完了すること。
+  * スクリプト一発で `.proto` ビルドから ISR 登録までが完了すること。
+
+**注**: ISR は参考実装として残しますが、BE との連携は行いません。
 
 ---
 
-## Milestone 3: Backend (BE) 実装 & ホットリロード
+## Milestone 3: Backend (BE) 実装
 
-### Task: BE サービスの基盤と User API
+### Task 3-1: BE サービスの基盤と User API ✅
 
 * **Background**: ユーザー情報の保存と取得を実装し、IDに UUID v7 を採用する。
 * **Acceptance Criteria**:
-* ユーザーの新規作成と一覧取得ができること。
+  * ユーザーの新規作成と一覧取得ができること。
+  * PostgreSQL を使用した実装が完了していること。
 
-### Task: 動的スキーマ同期 (Hot Reload) 実装 ❌ 制約により不可
+**Status**: 完了（PostgreSQL版）
+
+### Task 3-2: 動的スキーマ同期 (Hot Reload) 実装 ❌ 制約により不可
 
 * **Background**: 1分周期のポーリングと、バリデーターの Atomic Swap を実装する。
-* **Acceptance Criteria**:
-* ~~アプリを止めずに、ログ上でスキーマバージョンの更新が確認できること。~~
 * **実装結果**: ISRポーリング機構とスキーマ取得は実装完了。ログ出力も正常に動作。しかし、protovalidateが静的メッセージの`msg.ProtoReflect().Descriptor()`を参照するため、**バリデーションルールの動的更新は不可能**と判明。詳細は[Design Doc 3 § 7.1](001-DD.003.validation-strategy.md#71-実装結果と重要な制約事項)参照。
 
-### Task: Post API と Context Enrichment 実装
+**Status**: 技術的制約により中止
 
-* **Background**: `_plan` 注入と `protovalidate` による検証を実装。
+### Task 3-3: BE の YAML 永続化実装
+
+* **Background**: PostgreSQL を YAML ファイルに置き換え、シンプルな永続化を実現する。
 * **Acceptance Criteria**:
-* **Testcontainers-go** による統合テストがパスすること。
-* バリデーションエラーに `Design Doc 5` 仕様の `message_id` 等が含まれること。
+  * User API (CreateUser, ListUsers) が YAML ファイルで動作すること。
+  * `services/be/data/user.yaml` にデータが保存されること。
+  * 既存の Repository インターフェースを維持すること。
+
+**実装内容**:
+  * `YAMLUserRepository` の実装
+  * user.yaml のフォーマット定義
+  * 起動時の YAML ロード処理
+
+### Task 3-4: Post API と Context Enrichment 実装
+
+* **Background**: Post API を実装し、Context Enrichment（user.plan を使った動的バリデーション）を実現する。
+* **Acceptance Criteria**:
+  * CreatePost, ListPosts が実装されていること。
+  * CreatePost 時に user.yaml から user.plan を取得し、plan に応じた message 長制限を適用すること。
+  * free: 100文字、pro: 200文字、enterprise: 300文字
+  * `services/be/data/post.yaml` にデータが保存されること。
+  * curl/grpcurl でテストできること。
+
+**実装内容**:
+  * `PostHandler` の実装
+  * `YAMLPostRepository` の実装
+  * Context Enrichment ロジック
+  * post.yaml のフォーマット定義
 
 ---
 
-## Milestone 4: Frontend & E2E
+## Milestone 4: Frontend 実装
 
-### Task: Backend (Go) にスキーマ配信エンドポイントを追加
+### Task 4-1: FE の簡易実装
 
-* **Background**: FE 向けのスキーマ配信エンドポイントを BE に実装（ISR へのプロキシ）。
+* **Background**: protovalidate-ts を使ったクライアント側バリデーションを実装する。実際の BE 通信は行わず、YAML 永続化による疑似的な実装を行う。
 * **Acceptance Criteria**:
-* `/api/v1/schema/latest` エンドポイントが実装され、CORS設定が完了していること。
-* レスポンスヘッダーに `X-Schema-Version` を付与すること。
+  * ユーザー作成画面が実装されていること。
+  * 投稿作成・一覧画面が実装されていること。
+  * protovalidate-ts によるバリデーションが動作すること。
+  * `services/fe/data/user.yaml`, `services/fe/data/post.yaml` にデータが保存されること。
+  * BE への実際の通信は行わないこと。
 
-### Task: Frontend (React) と動的バリデーション UI
+**実装内容**:
+  * React/Vue/Svelte のいずれかで実装
+  * protovalidate-ts の組み込み
+  * YAML 読み書き処理
+  * 基本的な UI コンポーネント
 
-* **Background**: 即時フィードバックとバックグラウンドでのスキーマ更新を実装。
+**スコープ外**:
+  * ~~BE との実際の通信~~
+  * ~~スキーマの定期取得~~
+  * ~~Server Streaming~~
+  * ~~E2Eテスト~~
+
+---
+
+## Milestone 5: ドキュメント整備
+
+### Task 5-1: 検証手順書の作成
+
+* **Background**: curl/grpcurl を使った検証手順を整備する。
 * **Acceptance Criteria**:
-* protovalidate-ts を使用した即時バリデーションが機能すること。
-* スキーマ更新後、リロードなしで入力エラーの閾値が変化すること。
-* BE に直接リクエストを送信できること。
+  * User API の検証手順が記載されていること。
+  * Post API の検証手順が記載されていること（Context Enrichment の検証を含む）。
+  * セキュリティ検証（plan 偽装）の手順が記載されていること。
 
-### Task: シナリオテスト (Playwright) の導入
+### Task 5-2: README の更新
 
-* **Background**: YAML シナリオに基づく全系の自動検証を Testcontainers 上で行う。
+* **Background**: PoC のスコープ変更を反映し、起動方法を明記する。
 * **Acceptance Criteria**:
-* 全シナリオ（正常・異常・偽装リクエスト）が CI 上で完走すること。
-* FE/BE 構成でのE2Eテストが正常に動作すること。
+  * docker-compose.yml が不要になったことが記載されていること。
+  * 各サービスの個別起動方法が記載されていること。
+  * YAML 永続化の仕組みが説明されていること。
+  * PoC の目的（protovalidate + Context Enrichment の検証）が明記されていること。
+
+---
+
+## タスクの優先順位
+
+| Priority | Task | Milestone |
+|----------|------|-----------|
+| 高 | Task 3-3: BE の YAML 永続化実装 | M3 |
+| 高 | Task 3-4: Post API と Context Enrichment 実装 | M3 |
+| 中 | Task 4-1: FE の簡易実装 | M4 |
+| 中 | Task 5-1: 検証手順書の作成 | M5 |
+| 中 | Task 5-2: README の更新 | M5 |
+| 低 | Task 2-1, 2-2: ISR 関連 | M2 |
+
+**注**: Milestone 1 は完了済み、Milestone 2 の ISR は参考実装として残すが優先度は低い。
