@@ -56,11 +56,13 @@ go run main.go
 # -> http://localhost:50052 で起動
 
 # 3. (Optional) Start FE service (実装後)
+# 別ターミナルで実行:
 cd services/fe
 npm run dev
 # -> http://localhost:3000 で起動
 
 # 4. (Optional) Start ISR service (参考)
+# 別ターミナルで実行:
 cd services/isr
 go run main.go
 # -> http://localhost:50051 で起動
@@ -242,7 +244,7 @@ building-a-schema-first-dynamic-validation-system/
 └── docs/                # Design documentation
 ```
 
-**注**: `docker-compose.yml` と `docker/init-db/` は削除されました（PostgreSQL 不要のため）
+**注**: `docker-compose.yml` と `docker/init-db/` は今後削除予定です（PostgreSQL 不要のため）
 
 ## PoC Verification Scenarios
 

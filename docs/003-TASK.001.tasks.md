@@ -42,7 +42,7 @@ building-a-schema-first-dynamic-validation-system/
 └── README.md
 ```
 
-**注**: docker-compose.yml は削除されました（サービス間依存がないため）
+**注**: docker-compose.yml は今後削除予定です（サービス間依存がないため）
 
 ---
 
@@ -72,9 +72,8 @@ building-a-schema-first-dynamic-validation-system/
 * **Background**: ユーザー情報の保存と取得を実装し、IDに UUID v7 を採用する。
 * **Acceptance Criteria**:
   * ユーザーの新規作成と一覧取得ができること。
-  * PostgreSQL を使用した実装が完了していること。
 
-**Status**: 完了（PostgreSQL版）
+**Status**: 完了（PostgreSQL版として実装済み。Task 3-3 で YAML に移行予定）
 
 ### Task 3-2: 動的スキーマ同期 (Hot Reload) 実装 ❌ 制約により不可
 
