@@ -137,20 +137,3 @@ jobs:
         run: |
           cd services/isr
           staticcheck ./...
-
-  build:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Buf
-        uses: bufbuild/buf-setup-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate proto code
-        run: buf generate
-
-      - name: Build ISR service
-        run: docker compose build isr
