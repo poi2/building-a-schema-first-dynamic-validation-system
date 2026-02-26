@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"time"
+	"unicode/utf8"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -54,7 +55,8 @@ func (h *PostHandler) CreatePost(
 	// Manual validation: Check content length based on user plan
 	// Since interceptors run before the handler, we need to validate here
 	maxContentLength := getMaxContentLengthForPlan(user.Plan)
-	contentLength := len(req.Msg.Content)
+	// Use rune count (character count) instead of byte count for proper multi-byte character handling
+	contentLength := utf8.RuneCountInString(req.Msg.Content)
 	if contentLength > maxContentLength {
 		return nil, connect.NewError(
 			connect.CodeInvalidArgument,

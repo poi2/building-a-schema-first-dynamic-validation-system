@@ -148,6 +148,11 @@ func (r *YAMLPostRepository) List(ctx context.Context, userID string, page, page
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
+	// Defensive validation to prevent panic from invalid inputs
+	if page < 1 || pageSize < 1 {
+		return []*model.Post{}, 0, nil
+	}
+
 	data, err := r.readFile()
 	if err != nil {
 		return nil, 0, err
