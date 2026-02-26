@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -37,7 +38,7 @@ func run() error {
 	if dataDir == "" {
 		dataDir = "./data"
 	}
-	userYAMLPath := fmt.Sprintf("%s/user.yaml", dataDir)
+	userYAMLPath := filepath.Join(dataDir, "user.yaml")
 
 	// Initialize YAML repository
 	userRepo, err := repository.NewYAMLUserRepository(userYAMLPath)

@@ -39,18 +39,24 @@ func NewYAMLUserRepository(filePath string) (*YAMLUserRepository, error) {
 // initFile creates the YAML file with an empty users array if it doesn't exist
 func (r *YAMLUserRepository) initFile() error {
 	// Check if file exists
-	if _, err := os.Stat(r.filePath); os.IsNotExist(err) {
-		// Create directory if needed
-		dir := filepath.Dir(r.filePath)
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf("failed to create directory: %w", err)
+	if _, err := os.Stat(r.filePath); err != nil {
+		if os.IsNotExist(err) {
+			// Create directory if needed
+			dir := filepath.Dir(r.filePath)
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				return fmt.Errorf("failed to create directory: %w", err)
+			}
+
+			// Create empty YAML file
+			data := yamlData{Users: []*model.User{}}
+			if err := r.writeFile(&data); err != nil {
+				return fmt.Errorf("failed to create initial file: %w", err)
+			}
+
+			return nil
 		}
 
-		// Create empty YAML file
-		data := yamlData{Users: []*model.User{}}
-		if err := r.writeFile(&data); err != nil {
-			return fmt.Errorf("failed to create initial file: %w", err)
-		}
+		return fmt.Errorf("failed to stat file: %w", err)
 	}
 
 	return nil
@@ -76,15 +82,43 @@ func (r *YAMLUserRepository) readFile() (*yamlData, error) {
 	return &data, nil
 }
 
-// writeFile writes the data to the YAML file
+// writeFile writes the data to the YAML file atomically
 func (r *YAMLUserRepository) writeFile(data *yamlData) error {
 	yamlBytes, err := yaml.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal YAML: %w", err)
 	}
 
-	if err := os.WriteFile(r.filePath, yamlBytes, 0644); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+	// Atomic write: write to a temp file in the same directory, then rename.
+	dir := filepath.Dir(r.filePath)
+	tmpFile, err := os.CreateTemp(dir, ".tmp-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
+	}
+	// Ensure the temp file is removed if something goes wrong before rename.
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.Write(yamlBytes); err != nil {
+		tmpFile.Close()
+		return fmt.Errorf("failed to write temp file: %w", err)
+	}
+
+	if err := tmpFile.Sync(); err != nil {
+		tmpFile.Close()
+		return fmt.Errorf("failed to sync temp file: %w", err)
+	}
+
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("failed to close temp file: %w", err)
+	}
+
+	if err := os.Rename(tmpFile.Name(), r.filePath); err != nil {
+		return fmt.Errorf("failed to replace YAML file: %w", err)
+	}
+
+	// Ensure file permissions are consistent with previous behavior.
+	if err := os.Chmod(r.filePath, 0644); err != nil {
+		return fmt.Errorf("failed to set file permissions: %w", err)
 	}
 
 	return nil
@@ -132,15 +166,19 @@ func (r *YAMLUserRepository) List(ctx context.Context, page, pageSize int) ([]*m
 		end = total
 	}
 
-	// Return slice of users (sorted by creation time - newest first)
-	// Note: YAML preserves order, assuming users are added chronologically
-	// For proper DESC order, we need to reverse
-	reversedUsers := make([]*model.User, total)
-	for i, user := range data.Users {
-		reversedUsers[total-1-i] = user
+	// For proper DESC order, we iterate from the end and collect only the requested window
+	resultSize := end - offset
+	pageUsers := make([]*model.User, 0, resultSize)
+
+	// In the reversed view, index 0 corresponds to data.Users[total-1],
+	// index 1 to data.Users[total-2], etc.
+	start := total - 1 - offset    // first index in data.Users for this page
+	stop := total - end            // inclusive lower bound index in data.Users
+	for i := start; i >= stop; i-- { // walk backwards to maintain newest-first order
+		pageUsers = append(pageUsers, data.Users[i])
 	}
 
-	return reversedUsers[offset:end], total, nil
+	return pageUsers, total, nil
 }
 
 // GetByID retrieves a user by ID
@@ -159,5 +197,5 @@ func (r *YAMLUserRepository) GetByID(ctx context.Context, id string) (*model.Use
 		}
 	}
 
-	return nil, fmt.Errorf("user not found: %s", id)
+	return nil, fmt.Errorf("user %s: %w", id, os.ErrNotExist)
 }
