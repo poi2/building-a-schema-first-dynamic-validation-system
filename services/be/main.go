@@ -13,6 +13,7 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
+	postv1connect "github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/post/v1/postv1connect"
 	userv1connect "github.com/poi2/building-a-schema-first-dynamic-validation-system/pkg/gen/go/user/v1/userv1connect"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/be/internal/handler"
 	"github.com/poi2/building-a-schema-first-dynamic-validation-system/services/be/internal/repository"
@@ -33,22 +34,30 @@ func run() error {
 		port = "50052"
 	}
 
-	// YAML file path for user data
+	// YAML file paths for data
 	dataDir := os.Getenv("CELO_DATA_DIR")
 	if dataDir == "" {
 		dataDir = "./data"
 	}
 	userYAMLPath := filepath.Join(dataDir, "user.yaml")
+	postYAMLPath := filepath.Join(dataDir, "post.yaml")
 
-	// Initialize YAML repository
+	// Initialize YAML repositories
 	userRepo, err := repository.NewYAMLUserRepository(userYAMLPath)
 	if err != nil {
 		return fmt.Errorf("failed to initialize user repository: %w", err)
 	}
 	log.Printf("Initialized YAML user repository at %s", userYAMLPath)
 
-	// Initialize handler with YAML repository
+	postRepo, err := repository.NewYAMLPostRepository(postYAMLPath)
+	if err != nil {
+		return fmt.Errorf("failed to initialize post repository: %w", err)
+	}
+	log.Printf("Initialized YAML post repository at %s", postYAMLPath)
+
+	// Initialize handlers with YAML repositories
 	userHandler := handler.NewUserHandler(userRepo)
+	postHandler := handler.NewPostHandler(postRepo, userRepo)
 
 	// Create HTTP server with Connect
 	mux := http.NewServeMux()
@@ -56,8 +65,14 @@ func run() error {
 	interceptors := connect.WithInterceptors(
 		validate.NewInterceptor(),
 	)
-	path, connectHandler := userv1connect.NewUserServiceHandler(userHandler, interceptors)
-	mux.Handle(path, connectHandler)
+
+	// Register User Service
+	userPath, userConnectHandler := userv1connect.NewUserServiceHandler(userHandler, interceptors)
+	mux.Handle(userPath, userConnectHandler)
+
+	// Register Post Service
+	postPath, postConnectHandler := postv1connect.NewPostServiceHandler(postHandler, interceptors)
+	mux.Handle(postPath, postConnectHandler)
 
 	// Add health check endpoint
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
